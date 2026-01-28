@@ -1,0 +1,5 @@
+.vscode/
+.claude/
+
+# Built Visual Studio Code Extensions
+*.vsix

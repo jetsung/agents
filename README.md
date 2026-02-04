@@ -14,5 +14,4 @@
 
 ## 仓库镜像
 
-[MyCode](https://git.jetsung.com/jetsung/agents) ● [Framagit](https://framagit.org/jetsung/agents) ● [GitCode](https://gitcode.com/jetsung/agents) ● [Codeup](https://codeup.aliyun.com/jetsung/jetsung/agents)
-
+[MyCode](https://git.jetsung.com/jetsung/agents) ● [GitCode](https://gitcode.com/jetsung/agents) ● [GitHub](https://github.com/jetsung/agents)

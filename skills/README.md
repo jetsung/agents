@@ -18,27 +18,33 @@
 
 ## 如何安装
 
-使用项目根目录下的 `install.sh` 脚本可以自动将本仓库链接到各种 AI CLI 工具的 skills 目录：
+使用项目根目录下的 `install.sh` 脚本可以自动将本仓库链接到各种 AI CLI 工具。
+
+### 第一步：创建 agents 目录
+
+将当前目录链接至 `~/.agents`：
 
 ```bash
-./install.sh --action skills
+./install.sh --action agents-dir
 ```
 
-### 支持的 AI Agent 工具
+这会在 `~/.agents` 创建一个软链接指向当前项目目录。
 
-- Claude (`~/.claude/skills`)
-- Gemini (`~/.gemini/skills`)
-- OpenCode (`~/.opencode/skills`)
-- Codex (`~/.codex/skills`)
-- iFlow (`~/.iflow/skills`)
-- Qwen (`~/.qwen/skills`)
-- CodeBuddy (`~/.codebuddy/skills`)
-- Cline (`~/.cline/skills`)
-- Kilo Code (`~/.kilocode/skills`)
-- Roo (`~/.roo/skills`)
-- Factory (`~/.factory/skills`)
+### 第二步：安装 skills 和 agents 配置
 
-脚本会自动检测已安装的工具，并为每个工具创建软链接。如果目标目录已存在，脚本会自动备份。
+```bash
+./install.sh --action skills   # 安装 skills 目录
+./install.sh --action agents   # 安装 agents 配置文件
+```
+
+### 支持的软链接
+
+| 类型 | 源路径 (在 ~/.agents) | 目标路径 |
+|------|----------------------|----------|
+| skills | ~/.agents/skills | ~/.claude/skills, ~/.gemini/skills, ... |
+| agents | ~/.agents/AGENTS.md | ~/.gemini/GEMINI.md, ~/.claude/CLAUDE.md, ... |
+
+脚本会自动检测已安装的工具，并为每个工具创建软链接。如果目标已存在，脚本会自动备份。
 
 ## 如何使用
 

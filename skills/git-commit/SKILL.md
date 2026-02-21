@@ -1,7 +1,7 @@
 ---
 name: git-commit
 description: Generates standardized git commit messages following the Conventional Commits format with Chinese descriptions.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Git Commit Message Generation
@@ -10,10 +10,11 @@ This skill assists in creating git commit messages that adhere to the Convention
 
 ## Instructions
 
-When you are asked to create a commit message or commit changes, follow these steps:
+When you are asked to create a commit message or commit changes, you MUST follow these steps to ensure the changes are physically committed to the repository:
 
-1.  **Analyze and stage changes**: Identify the changes that need to be committed. If they are not yet staged, stage them using `git add <files>` or `git add .`.
-2.  **Determine the type**: Use one of the following types:
+1.  **Analyze changes**: Identify the changes that need to be committed.
+2.  **Stage changes (Mandatory)**: If the changes are not yet staged, you MUST use the `run_shell_command` tool to stage them: `git add <files>` or `git add .`.
+3.  **Determine the type**: Use one of the following types:
     *   `feat`: A new feature
     *   `fix`: A bug fix
     *   `docs`: Documentation only changes
@@ -25,13 +26,13 @@ When you are asked to create a commit message or commit changes, follow these st
     *   `ci`: Changes to our CI configuration files and scripts
     *   `chore`: Other changes that don't modify src or test files
     *   `revert`: Reverts a previous commit
-3.  **Determine the scope**: (Optional but recommended) The specific module, directory, or component changed (e.g., `acme`, `nginx`, `readme`).
-4.  **Write the description**:
+4.  **Determine the scope**: (Optional but recommended) The specific module, directory, or component changed (e.g., `acme`, `nginx`, `readme`).
+5.  **Write the description**:
     *   Must be in **Chinese (Simplified)**.
     *   Must be concise and descriptive.
     *   Do not end with a period.
-5.  **Format**: Combine them as `<type>(<scope>): <description>`.
-6.  **Execute the commit**: Run the command `git commit -m "<type>(<scope>): <description>"` to commit the changes.
+6.  **Execution (CRITICAL)**: You MUST call the `run_shell_command` tool to execute the commit: `git commit -m "<type>(<scope>): <description>"`. Merely stating the command or the message in the reasoning process is INCOMPLETE.
+7.  **Verification**: After execution, you MUST run `git status` to verify that the commit was successful and that the working directory is in the expected state.
 
 ## Examples
 

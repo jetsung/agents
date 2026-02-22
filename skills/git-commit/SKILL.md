@@ -13,8 +13,10 @@ This skill assists in creating git commit messages that adhere to the Convention
 When you are asked to create a commit message or commit changes, you MUST follow these steps to ensure the changes are physically committed to the repository:
 
 1.  **Analyze changes**: Identify the changes that need to be committed.
-2.  **Stage changes (Mandatory)**: If the changes are not yet staged, you MUST use the `run_shell_command` tool to stage them: `git add <files>` or `git add .`.
-3.  **Determine the type**: Use one of the following types:
+2. **确保暂存目标变更（Ensure staged changes）**
+请预先将需要提交的文件通过 `git add <files>` 手动暂存。
+本 skill 只会提交当前已暂存（staged）的内容，不会自动暂存其他变动。
+请在 commit 前自行确认暂存区内容。3.  **Determine the type**: Use one of the following types:
     *   `feat`: A new feature
     *   `fix`: A bug fix
     *   `docs`: Documentation only changes

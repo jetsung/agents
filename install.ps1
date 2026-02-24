@@ -13,7 +13,6 @@ $AGENTS_DIR = Join-Path $HOME_DIR ".agents"
 # 定义目标 CLI 工具的 skills 目录路径
 $SKILLS_TARGETS = @(
     (Join-Path $HOME_DIR ".claude/skills"),
-    (Join-Path $HOME_DIR ".gemini/skills"),
     (Join-Path $HOME_DIR ".opencode/skills"),
     (Join-Path $HOME_DIR ".codex/skills"),
     (Join-Path $HOME_DIR ".iflow/skills"),
@@ -29,7 +28,6 @@ $SKILLS_TARGETS = @(
 # 定义目标 CLI 工具的 agents 配置文件的路径
 # 格式: @{ Target = "目标路径"; Source = "源文件相对路径" }
 $AGENTS_TARGETS = @(
-    @{ Target = (Join-Path $HOME_DIR ".gemini/GEMINI.md"); Source = "AGENTS.md" },
     @{ Target = (Join-Path $HOME_DIR ".claude/CLAUDE.md"); Source = "AGENTS.md" },
     @{ Target = (Join-Path $HOME_DIR ".opencode/AGENTS.md"); Source = "AGENTS.md" },
     @{ Target = (Join-Path $HOME_DIR ".codex/AGENTS.md"); Source = "AGENTS.md" },

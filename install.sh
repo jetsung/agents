@@ -9,7 +9,6 @@ AGENTS_DIR="$HOME/.agents"
 # 定义目标 CLI 工具的 skills 目录路径
 SKILLS_TARGETS=(
     "$HOME/.claude/skills"
-    "$HOME/.gemini/skills"
     "$HOME/.opencode/skills"
     "$HOME/.codex/skills"
     "$HOME/.iflow/skills"
@@ -25,7 +24,6 @@ SKILLS_TARGETS=(
 # 定义目标 CLI 工具的 agents 配置文件的路径
 # 格式: "目标路径:源文件相对路径"
 AGENTS_TARGETS=(
-    "$HOME/.gemini/GEMINI.md:AGENTS.md"
     "$HOME/.claude/CLAUDE.md:AGENTS.md"
     "$HOME/.opencode/AGENTS.md:AGENTS.md"
     "$HOME/.codex/AGENTS.md:AGENTS.md"

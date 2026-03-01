@@ -41,7 +41,7 @@
 
 | 类型 | 源路径 (在 ~/.agents) | 目标路径 |
 |------|----------------------|----------|
-| skills | ~/.agents/skills | ~/.claude/skills, ~/.gemini/skills, ... |
+| skills | ~/.agents/skills | ~/.claude/skills, ~/.opencode/skills, ... |
 | agents | ~/.agents/AGENTS.md | ~/.gemini/GEMINI.md, ~/.claude/CLAUDE.md, ... |
 
 脚本会自动检测已安装的工具，并为每个工具创建软链接。如果目标已存在，脚本会自动备份。

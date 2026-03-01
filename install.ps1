@@ -28,6 +28,7 @@ $SKILLS_TARGETS = @(
 # 定义目标 CLI 工具的 agents 配置文件的路径
 # 格式: @{ Target = "目标路径"; Source = "源文件相对路径" }
 $AGENTS_TARGETS = @(
+    @{ Target = (Join-Path $HOME_DIR ".gemini/GEMINI.md"); Source = "AGENTS.md" },
     @{ Target = (Join-Path $HOME_DIR ".claude/CLAUDE.md"); Source = "AGENTS.md" },
     @{ Target = (Join-Path $HOME_DIR ".opencode/AGENTS.md"); Source = "AGENTS.md" },
     @{ Target = (Join-Path $HOME_DIR ".codex/AGENTS.md"); Source = "AGENTS.md" },
@@ -85,7 +86,11 @@ function New-Link {
 
     # 3. 创建符号链接
     # 先尝试使用 mklink 命令
-    $cmd = "cmd /c mklink /D `"$LinkName`" `"$Target`""
+    if (Test-Path $Target -PathType Container) {
+        $cmd = "cmd /c mklink /D `"$LinkName`" `"$Target`""
+    } else {
+        $cmd = "cmd /c mklink `"$LinkName`" `"$Target`""
+    }
     $result = cmd /c $cmd 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[成功] 已链接: $LinkName -> $Target" -ForegroundColor Green

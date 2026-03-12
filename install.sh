@@ -15,7 +15,7 @@ SKILLS_TARGETS=(
     "$HOME/.qwen/skills"
     "$HOME/.codebuddy/skills"
     "$HOME/.cline/skills"
-    "$HOME/.kilocode/skills"
+#     "$HOME/.kilocode/skills"  # kilo 使用 --action skills 时可直接使用 ~/.agents/skills
     "$HOME/.roo/skills"
     "$HOME/.factory/skills"
     "$HOME/.qoder/skills"

@@ -19,7 +19,7 @@ $SKILLS_TARGETS = @(
     (Join-Path $HOME_DIR ".qwen/skills"),
     (Join-Path $HOME_DIR ".codebuddy/skills"),
     (Join-Path $HOME_DIR ".cline/skills"),
-    (Join-Path $HOME_DIR ".kilocode/skills"),
+    # (Join-Path $HOME_DIR ".kilocode/skills")  # kilo 使用 --action skills 时可直接使用 ~/.agents/skills
     (Join-Path $HOME_DIR ".roo/skills"),
     (Join-Path $HOME_DIR ".factory/skills"),
     (Join-Path $HOME_DIR ".qoder/skills")

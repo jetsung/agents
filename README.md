@@ -6,7 +6,7 @@
 
 - **Prompts**: 收集各主流 AI 平台（如 Anthropic, Google, OpenAI 等）的系统提示词与指令。
 - **Skills**: 提供可复用的 AI 技能扩展，支持多种 AI CLI 工具。
-- **Automation**: 提供便捷的安装脚本 `install.sh`，用于快速搭建和同步配置。
+- **Automation**: 提供便捷的设置脚本 `setup.sh`，用于快速搭建和同步配置。
 
 ## 许可证
 

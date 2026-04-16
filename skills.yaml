@@ -1,0 +1,11 @@
+env:
+  HELLO: WORLD
+
+tools:
+  - id: weiyun
+    name: 微云 MCP 工具
+    env:
+      DL_URL: https://cdn.addon.tencentsuite.com/static/tencent-weiyun.zip
+    run: |
+      curl -fsSL -O "$DL_URL"
+      unzip -o -q -d ../skills tencent-weiyun.zip

@@ -4,4 +4,7 @@
 # Built Visual Studio Code Extensions
 *.vsix
 
+__pycache__/
+
+.tmp/
 skills/.system

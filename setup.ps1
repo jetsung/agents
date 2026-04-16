@@ -99,7 +99,7 @@ function New-Link {
 }
 
 # 安装 agents 目录的函数
-function Install-AgentsDir {
+function Setup-AgentsDir {
     Write-Host "当前项目路径: $PROJECT_DIR"
     Write-Host "Agents 目录: $AGENTS_DIR"
     Write-Host "开始建立链接..."
@@ -139,11 +139,11 @@ function Install-AgentsDir {
 }
 
 # 安装 skills 的函数
-function Install-Skills {
+function Setup-Skills {
     # 检查 ~/.agents 是否存在，如果不存在则自动创建
     if (-not (Test-Path $AGENTS_DIR)) {
         Write-Host "[信息] ~/.agents 不存在，正在自动创建..." -ForegroundColor Yellow
-        Install-AgentsDir
+        Setup-AgentsDir
     }
 
     Write-Host "以 ~/.agents 为基准安装 skills..."
@@ -158,11 +158,11 @@ function Install-Skills {
 }
 
 # 安装 agents 配置文件的函数
-function Install-Agents {
+function Setup-Agents {
     # 检查 ~/.agents 是否存在，如果不存在则自动创建
     if (-not (Test-Path $AGENTS_DIR)) {
         Write-Host "[信息] ~/.agents 不存在，正在自动创建..." -ForegroundColor Yellow
-        Install-AgentsDir
+        Setup-AgentsDir
     }
 
     Write-Host "以 ~/.agents 为基准安装 agents 配置文件..."
@@ -187,7 +187,7 @@ function Install-Agents {
 
 # 显示帮助信息
 function Show-Help {
-    Write-Host "用法: .\install.ps1 [-Action ACTION]" -ForegroundColor Cyan
+    Write-Host "用法: .\setup.ps1 [-Action ACTION]" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "选项:" -ForegroundColor White
     Write-Host "  -Action ACTION    执行指定动作"
@@ -236,13 +236,13 @@ if ($ShowHelp) {
 # 根据动作执行相应功能
 switch ($Action) {
     "agents-dir" {
-        Install-AgentsDir
+        Setup-AgentsDir
     }
     "skills" {
-        Install-Skills
+        Setup-Skills
     }
     "agents" {
-        Install-Agents
+        Setup-Agents
     }
     "" {
         Write-Host "错误: 未指定动作。请使用 -Action 指定动作。" -ForegroundColor Red

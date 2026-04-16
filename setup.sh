@@ -86,7 +86,7 @@ create_link() {
 }
 
 # 安装 agents 目录的函数
-install_agents_dir() {
+setup_agents_dir() {
     echo "当前项目路径: $PROJECT_DIR"
     echo "Agents 目录: $AGENTS_DIR"
     echo "开始建立软链接..."
@@ -127,11 +127,11 @@ install_agents_dir() {
 }
 
 # 安装 skills 的函数
-install_skills() {
+setup_skills() {
     # 检查 ~/.agents 是否存在，如果不存在则自动创建
     if [ ! -e "$AGENTS_DIR" ]; then
         echo "[信息] ~/.agents 不存在，正在自动创建..."
-        install_agents_dir
+        setup_agents_dir
     fi
 
     echo "以 ~/.agents 为基准安装 skills..."
@@ -145,11 +145,11 @@ install_skills() {
 }
 
 # 安装 agents 配置文件的函数
-install_agents() {
+setup_agents() {
     # 检查 ~/.agents 是否存在，如果不存在则自动创建
     if [ ! -e "$AGENTS_DIR" ]; then
         echo "[信息] ~/.agents 不存在，正在自动创建..."
-        install_agents_dir
+        setup_agents_dir
     fi
 
     echo "以 ~/.agents 为基准安装 agents 配置文件..."
@@ -216,13 +216,13 @@ done
 # 根据动作执行相应功能
 case "$ACTION" in
     agents-dir)
-        install_agents_dir
+        setup_agents_dir
         ;;
     skills)
-        install_skills
+        setup_skills
         ;;
     agents)
-        install_agents
+        setup_agents
         ;;
     "")
         echo "错误: 未指定动作。请使用 --action 或 -a 指定动作。"

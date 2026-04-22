@@ -1,3 +1,8 @@
+---
+name: update-gh-action-version
+description: 自动更新 GitHub Actions 工作流文件中使用的 Action 版本。使用场景：用户需要更新 GitHub Actions workflow 文件中的 action 版本，或者要求升级到最新版本。
+---
+
 # Skill: update-gh-action-version
 
 ## 简介
@@ -7,7 +12,7 @@
 - 需要安装 `curl` 和 `sed`。
 
 ## 调用方式
-```bash
+```
 /update-gh-action-version [dir] [action]
 ```
 
@@ -17,17 +22,17 @@
 
 ## 示例
 更新当前项目 `.github/workflows` 下所有 yaml/yml 文件中所有 Action 的版本：
-```bash
+```
 /update-gh-action-version
 ```
 
 更新 `.test/test/` 目录下所有 yaml/yml 文件中所有 Action 的版本：
-```bash
+```
 /update-gh-action-version .test/test/
 ```
 
 更新 `.test/test/` 目录下所有 yaml/yml 文件中 `actions/checkout` 的版本：
-```bash
+```
 /update-gh-action-version .test/test/ actions/checkout
 ```
 
@@ -35,3 +40,6 @@
 1. 通过 GitHub API 获取指定 Action 的最新 Release Tag。
 2. 提取其主版本号（如 `v4.1.0` -> `v4`）。
 3. 使用 `sed` 正则匹配并替换 YAML 文件中对应的版本引用。
+
+## 脚本位置
+实际执行的脚本位于 `scripts/update_action.sh`

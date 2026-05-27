@@ -41,6 +41,7 @@ setup-skills:
         "$HOME/.roo/skills"
         "$HOME/.factory/skills"
         "$HOME/.qoder/skills"
+        "$HOME/.langcli/skills"
     )
 
     for TARGET in "${TARGETS[@]}"; do

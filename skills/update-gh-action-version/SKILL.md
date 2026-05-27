@@ -1,45 +1,36 @@
 ---
 name: update-gh-action-version
 description: 自动更新 GitHub Actions 工作流文件中使用的 Action 版本。使用场景：用户需要更新 GitHub Actions workflow 文件中的 action 版本，或者要求升级到最新版本。
+compatibility: Requires curl, sed, and access to the GitHub API
+allowed-tools: Bash(scripts/update_action.sh:*)
 ---
 
-# Skill: update-gh-action-version
+# Update GitHub Actions Versions
 
-## 简介
-这是一个用于自动更新 GitHub Actions 工作流文件中使用的 Action 版本的辅助脚本。
+## Instructions
 
-## 依赖
-- 需要安装 `curl` 和 `sed`。
+Run `scripts/update_action.sh` to update Action versions in workflow files.
 
-## 调用方式
-```
-/update-gh-action-version [dir] [action]
-```
+**Parameters:**
+- `dir` (optional): Target directory containing workflow files (default: `.github/workflows`)
+- `action` (optional): Specific Action to update (e.g., `actions/checkout`)
 
-## 参数说明
-- `dir`: 可选，要更新的目录路径（默认为 `.github/workflows`）
-- `action`: 可选，要更新的 Action 名称（如 `actions/checkout`）
+**Usage examples:**
 
-## 示例
-更新当前项目 `.github/workflows` 下所有 yaml/yml 文件中所有 Action 的版本：
-```
-/update-gh-action-version
-```
+```bash
+# Update all Actions in .github/workflows
+scripts/update_action.sh
 
-更新 `.test/test/` 目录下所有 yaml/yml 文件中所有 Action 的版本：
-```
-/update-gh-action-version .test/test/
+# Update all Actions in a specific directory
+scripts/update_action.sh .test/test/
+
+# Update only actions/checkout in a specific directory
+scripts/update_action.sh .test/test/ actions/checkout
 ```
 
-更新 `.test/test/` 目录下所有 yaml/yml 文件中 `actions/checkout` 的版本：
-```
-/update-gh-action-version .test/test/ actions/checkout
-```
+## How it works
 
-## 原理
-1. 通过 GitHub API 获取指定 Action 的最新 Release Tag。
-2. 提取其主版本号（如 `v4.1.0` -> `v4`）。
-3. 使用 `sed` 正则匹配并替换 YAML 文件中对应的版本引用。
-
-## 脚本位置
-实际执行的脚本位于 `scripts/update_action.sh`
+1. Finds all `.yml`/`.yaml` files in the target directory
+2. Queries the GitHub API for the latest release tag of each Action
+3. Extracts the major version (e.g., `v4.1.0` → `v4`)
+4. Uses `sed` to replace version references in the workflow files

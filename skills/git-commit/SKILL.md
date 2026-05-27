@@ -1,55 +1,40 @@
 ---
 name: git-commit
-description: Generates standardized git commit messages following the Conventional Commits format with Chinese descriptions.
-version: 1.1.0
+description: Generates standardized git commit messages following the Conventional Commits format with Chinese descriptions. Use when committing changes, creating git commits, or writing commit messages.
+metadata:
+  version: "1.2.0"
 ---
 
 # Git Commit Message Generation
 
-This skill assists in creating git commit messages that adhere to the Conventional Commits specification.
-
 ## Instructions
 
-When you are asked to create a commit message or commit changes, you MUST follow these steps to ensure the changes are physically committed to the repository:
+When asked to commit changes, follow these steps:
 
-1.  **Analyze changes**: Identify the changes that need to be committed.
-2. **确保暂存目标变更（Ensure staged changes）**
-请预先将需要提交的文件通过 `git add <files>` 手动暂存。
-本 skill 只会提交当前已暂存（staged）的内容，不会自动暂存其他变动。
-请在 commit 前自行确认暂存区内容。3.  **Determine the type**: Use one of the following types:
-    *   `feat`: A new feature
-    *   `fix`: A bug fix
-    *   `docs`: Documentation only changes
-    *   `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
-    *   `refactor`: A code change that neither fixes a bug nor adds a feature
-    *   `perf`: A code change that improves performance
-    *   `test`: Adding missing tests or correcting existing tests
-    *   `build`: Changes that affect the build system or external dependencies
-    *   `ci`: Changes to our CI configuration files and scripts
-    *   `chore`: Other changes that don't modify src or test files
-    *   `revert`: Reverts a previous commit
-4.  **Determine the scope**: (Optional but recommended) The specific module, directory, or component changed (e.g., `acme`, `nginx`, `readme`).
-5.  **Write the description**:
-    *   Must be in **Chinese (Simplified)**.
-    *   Must be concise and descriptive.
-    *   Do not end with a period.
-6.  **Execution (CRITICAL)**: You MUST call the `run_shell_command` tool to execute the commit: `git commit -m "<type>(<scope>): <description>"`. Merely stating the command or the message in the reasoning process is INCOMPLETE.
-7.  **Verification**: After execution, you MUST run `git status` to verify that the commit was successful and that the working directory is in the expected state.
+1. **Analyze staged changes**: Run `git diff --staged` to identify what needs to be committed. If nothing is staged, ask the user to stage files first — this skill only commits already-staged content.
+2. **Determine the type**:
+   - `feat`: 新功能
+   - `fix`: 修复 bug
+   - `docs`: 仅文档变更
+   - `style`: 不影响代码含义的格式变更
+   - `refactor`: 既非修复 bug 也非新增功能的代码变更
+   - `perf`: 性能优化
+   - `test`: 添加或修正测试
+   - `build`: 影响构建系统或外部依赖的变更
+   - `ci`: CI 配置文件和脚本变更
+   - `chore`: 其他不影响 src 或 test 的变更
+   - `revert`: 回退之前的提交
+3. **Determine the scope** (可选): 具体模块、目录或组件名称（如 `utils`、`api`、`readme`）
+4. **Write the description**:
+   - 使用**简体中文**
+   - 简洁描述变更内容
+   - 不加句号
+5. **Execute**: `git commit -m "<type>(<scope>): <description>"`
+6. **Verify**: 运行 `git status` 确认提交成功
 
 ## Examples
 
-**Example 1:**
-*   Input: Added a new configuration file for Adminer.
-*   Command: `git commit -m "feat(adminer): 添加 compose 配置文件"`
-
-**Example 2:**
-*   Input: Fixed a date formatting bug in utils.
-*   Command: `git commit -m "fix(utils): 修复日期格式化错误"`
-
-**Example 3:**
-*   Input: Updated the README file.
-*   Command: `git commit -m "docs(README): 更新项目说明"`
-
-**Example 4:**
-*   Input: Upgraded dependency packages.
-*   Command: `git commit -m "chore(deps): 升级依赖包"`
+- `feat(adminer): 添加 compose 配置文件`
+- `fix(utils): 修复日期格式化错误`
+- `docs(README): 更新项目说明`
+- `chore(deps): 升级依赖包`

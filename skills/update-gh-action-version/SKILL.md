@@ -9,7 +9,7 @@ allowed-tools: Bash(scripts/update_action.sh:*)
 
 ## Instructions
 
-Run `scripts/update_action.sh` to update Action versions in workflow files.
+Run `scripts/update_action.sh` (relative to this skill directory) to update Action versions in workflow files.
 
 **Parameters:**
 - `dir` (optional): Target directory containing workflow files (default: `.github/workflows`)

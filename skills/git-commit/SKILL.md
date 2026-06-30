@@ -29,8 +29,14 @@ When asked to commit changes, follow these steps:
    - 使用**简体中文**
    - 简洁描述变更内容
    - 不加句号
+   - 多个功能修改时，使用列表形式（每项以 `- ` 开头，各占一行），而不是一句话总结
 5. **Execute**: `git commit -m "<type>(<scope>): <description>"`
 6. **Verify**: 运行 `git status` 确认提交成功
+
+## Constraints
+
+- **禁止使用 `Co-Authored-By`**: 提交信息中不得添加任何 `Co-Authored-By` 尾行（例如 `Co-Authored-By: Claude <noreply@anthropic.com>`）。始终使用简单的 `git commit -m` 形式，不包含任何尾部元数据行。
+- **禁止推送到远程仓库**: 只执行本地 `git commit`，不得执行 `git push` 或任何推送到远程仓库的操作。
 
 ## Examples
 
@@ -38,3 +44,10 @@ When asked to commit changes, follow these steps:
 - `fix(utils): 修复日期格式化错误`
 - `docs(README): 更新项目说明`
 - `chore(deps): 升级依赖包`
+- 多行列表示例：
+  ```
+  feat(utils): 添加常用工具函数
+  - 添加日期格式化函数
+  - 添加字符串截断函数
+  - 添加深拷贝函数
+  ```

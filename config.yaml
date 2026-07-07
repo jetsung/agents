@@ -1,0 +1,103 @@
+env:
+  HELLO: WORLD
+
+# 工具平台配置
+# path: 工具配置目录
+# skills: skills 子目录名（相对于 path），为空则不安装
+# agents: agents 配置文件名（相对于 path），为空则不安装
+# source: agents 源文件名，默认为 AGENTS.md
+platforms:
+  claude:
+    path: ~/.claude
+    skills: skills
+    agents: CLAUDE.md
+
+  openclaude:
+    path: ~/.openclaude
+    skills: skills
+    agents: CLAUDE.md
+
+  opencode:
+    path: ~/.opencode
+    skills: skills
+    agents: AGENTS.md
+
+  codex:
+    path: ~/.codex
+    skills: skills
+    agents: AGENTS.md
+
+  qwen:
+    path: ~/.qwen
+    skills: skills
+    agents: AGENTS.md
+
+  codebuddy:
+    path: ~/.codebuddy
+    skills: skills
+    agents: AGENTS.md
+
+  cline:
+    path: ~/.cline
+    skills: skills
+    agents: CLAUDE.md
+
+  # kilo:
+  #   path: ~/.kilocode
+  #   skills: skills  # kilo 可直接使用 ~/.agents/skills
+  #   agents: AGENTS.md
+
+  roo:
+    path: ~/.roo
+    skills: skills
+    agents: AGENTS.md
+
+  factory:
+    path: ~/.factory
+    skills: skills
+    agents: AGENTS.md
+
+  qoder:
+    path: ~/.qoder
+    skills: skills
+    agents: AGENTS.md
+
+  langcli:
+    path: ~/.langcli
+    skills: skills
+    agents:
+
+  gemini:
+    path: ~/.gemini
+    skills:
+    agents: GEMINI.md
+
+  atomcode:
+    path: ~/.atomcode
+    skills:
+    agents: ATOMCODE.md
+
+# Skills 安装配置
+# 支持两种格式:
+# 1. run: shell 命令字符串（不跨平台）
+# 2. steps: 步骤列表（跨平台）
+#
+# steps 支持的命令:
+#   - download: 下载文件
+#     - download: URL（支持 $ENV_VAR 替换）
+#     - dest: 保存到临时目录的文件名（默认从 URL 提取）
+#     - extract: 解压目标路径（默认 true，解压到 skills/）
+#                 true/false/路径字符串
+#   - unzip: 解压 zip 文件（已弃用，建议用 download + extract）
+#   - copy: {src, dest}      复制文件/目录
+#   - move: {src, dest}      移动文件/目录
+#   - mkdir: {path}          创建目录
+#   - remove: {path}         删除文件/目录
+tools:
+  - id: weiyun
+    name: 微云 MCP 工具
+    env:
+      URL: https://cdn.addon.tencentsuite.com/static/tencent-weiyun.zip
+    steps:
+      - download: $URL
+        dest: tencent-weiyun.zip

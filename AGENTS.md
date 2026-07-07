@@ -1,4 +1,4 @@
-1. 总是使用简体中文回复。
-2. 推理过程使用简体中文输出。
+- Reply in Chinese
+- Don't add AI co-author tags to commits
 
 @RTK.md

@@ -14,24 +14,6 @@
 - **Skills**: 提供可复用的 AI 技能扩展，支持多种 AI CLI 工具。
 - **Automation**: 提供便捷的跨平台安装脚本 `install.py`，用于快速搭建和同步配置。
 
-## 已包含技能
-
-### [git-commit](./skills/git-commit/SKILL.md)
-
-生成遵循 Conventional Commits 规范的标准化 Git 提交消息。
-
-- **功能**: 分析变更并生成符合规范的提交说明。
-- **语言**: 提交说明（description）使用简体中文。
-- **规范**: 遵循 `<type>(<scope>): <description>` 格式。
-
-### [update-gh-action-version](./skills/update-gh-action-version/SKILL.md)
-
-自动更新 GitHub Actions 工作流文件中的 Action 版本。
-
-### [weiyun](./skills/weiyun/SKILL.md)
-
-微云网盘 MCP 接口技能，支持目录列表、下载、删除、上传、分享等功能。
-
 ## 如何安装
 
 ### 使用 just（推荐）
@@ -136,7 +118,7 @@ tools:
 
 1. 在 `skills/` 目录下创建新的技能目录
 2. 在该目录下创建 `SKILL.md` 文件，包含技能的详细说明
-3. 在 `README.md` 的「已包含技能」部分添加新技能的介绍
+3. 在 `README.md` 中添加新技能的介绍
 
 ## 许可证
 

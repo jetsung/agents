@@ -35,7 +35,7 @@ platforms:
   codebuddy:
     path: ~/.codebuddy
     skills: skills
-    agents: AGENTS.md
+    agents: CODEBUDDY.md
 
   cline:
     path: ~/.cline

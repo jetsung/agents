@@ -101,3 +101,21 @@ tools:
     steps:
       - download: $URL
         dest: tencent-weiyun.zip
+
+skills:
+  - name: antfu
+    url: https://github.com/antfu/skills
+  - name: ui-ux-pro-max-skill
+    url: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+  - name: superpowers
+    url: https://github.com/obra/superpowers
+  - name: mattpocock
+    url: https://github.com/mattpocock/skills
+  - name: claude-code-skills
+    url: https://github.com/julianobarbosa/claude-code-skills
+
+prompts:
+  - name: f
+    url: https://github.com/f/prompts.chat
+  - name: system_prompts_leaks
+    url: https://github.com/asgeirtj/system_prompts_leaks

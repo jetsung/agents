@@ -60,6 +60,43 @@ python3 install.py install weiyun  # 安装指定技能
 
 每个技能目录下的 `SKILL.md` 文件包含了该技能的详细说明和使用指令。Agent 可以根据这些指令来执行特定的任务。
 
+### just 命令
+
+```bash
+# 安装
+just setup           # 完整初始化（链接目录 + 安装 skills + 安装 agents）
+just setup-dir       # 仅链接当前目录到 ~/.agents
+just setup-skills    # 仅安装 skills 目录
+just setup-agents    # 仅安装 agents 配置文件
+just install         # 安装所有工具/技能
+just install weiyun  # 安装指定工具/技能
+
+# Skills 管理
+just skill-list          # 列出 config.yaml 中配置的 skills 渠道
+just skill-show          # 显示所有渠道的可用 skill 列表
+just skill-show antfu    # 显示指定渠道的可用 skill 列表
+just skill-show user/repo # 直接显示 GitHub 等 git 平台的 skill 列表
+just skill-show https://github.com/user/repo  # 通过 URL 显示 skill 列表
+just skill-installed     # 列出已安装的 skills
+just skill-add antfu vue # 从指定渠道安装 skill
+just skill-find          # 搜索 skills（交互式）
+just skill-find react    # 搜索包含关键词的 skills
+
+# Prompts 管理
+just prompt-list    # 列出 config.yaml 中配置的 prompts 渠道
+```
+
+#### skill-show 使用说明
+
+`skill-show` 支持三种参数形式：
+
+| 用法 | 说明 |
+|------|------|
+| `just skill-show` | 显示 config.yaml 中所有 skills 渠道的可用 skill |
+| `just skill-show antfu` | 显示 config.yaml 中名为 `antfu` 的渠道 |
+| `just skill-show vercel-labs/agent-skills` | 直接显示 GitHub 上的该仓库 skill 列表 |
+| `just skill-show https://gitlab.com/user/repo` | 通过 URL 显示任意 git 平台仓库的 skill 列表 |
+
 ## 项目结构
 
 ```
@@ -85,22 +122,48 @@ env:
   HELLO: WORLD
 
 # 工具平台配置
+# path: 工具配置目录
+# skills: skills 子目录名（相对于 path），为空则不安装
+# agents: agents 配置文件名（相对于 path），为空则不安装
+# source: agents 源文件名，默认为 AGENTS.md
 platforms:
   claude:
     path: ~/.claude
     skills: skills
     agents: CLAUDE.md
 
-# 技能安装配置
+  opencode:
+    path: ~/.opencode
+    skills: skills
+    agents: AGENTS.md
+
+  # ... 其他平台
+
+# Skills 渠道列表
+# name: 渠道名称（用于 just skill-show / just skill-add 等命令）
+# url: 仓库地址（支持 GitHub、GitLab、自建等任意 git 平台）
+skills:
+  - name: antfu
+    url: https://github.com/antfu/skills
+  - name: mattpocock
+    url: https://github.com/mattpocock/skills
+
+# Prompts 渠道列表
+prompts:
+  - name: f
+    url: https://github.com/f/prompts.chat
+  - name: system_prompts_leaks
+    url: https://github.com/asgeirtj/system_prompts_leaks
+
+# 工具安装配置
 tools:
   - id: weiyun
     name: 微云 MCP 工具
     env:
-      URL: https://example.com/tool.zip
+      URL: https://cdn.addon.tencentsuite.com/static/tencent-weiyun.zip
     steps:
       - download: $URL
-        dest: tool.zip
-        extract: skills  # 可选，默认 true
+        dest: tencent-weiyun.zip
 ```
 
 ### steps 支持的命令

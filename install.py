@@ -13,6 +13,7 @@ import yaml
 import subprocess
 import os
 import sys
+import re
 import argparse
 import shutil
 import urllib.request
@@ -419,20 +420,236 @@ def install_skills(project_dir: Path, skill_filter: str = None):
 # ==================== 主函数 ====================
 
 
+def cmd_skills_list(project_dir: Path) -> None:
+    """列出 config.yaml 中配置的 skills 源"""
+    config = load_config(project_dir)
+    skills = config.get("skills", [])
+
+    if not skills:
+        print("没有配置 skills")
+        return
+
+    print(f'{"名称":<20} URL')
+    print("-" * 80)
+    for s in skills:
+        print(f'{s["name"]:<20} {s["url"]}')
+
+
+def cmd_prompts_list(project_dir: Path) -> None:
+    """列出 config.yaml 中配置的 prompts 源"""
+    config = load_config(project_dir)
+    prompts = config.get("prompts", [])
+
+    if not prompts:
+        print("没有配置 prompts")
+        return
+
+    print(f'{"名称":<20} URL')
+    print("-" * 80)
+    for p in prompts:
+        print(f'{p["name"]:<20} {p["url"]}')
+
+
+def resolve_source(channel: str) -> str:
+    """判断 channel 是否为 user/repo 格式或 URL，返回可直接用于 npx skills add 的源
+
+    支持格式:
+    - user/repo (GitHub 等)
+    - https://github.com/user/repo
+    - https://gitlab.com/user/repo
+    - https://example.com/user/repo (自建)
+    - git@github.com:user/repo.git (SSH)
+    """
+    # URL with scheme (https://, http://, git://, ssh://)
+    if re.match(r'^[a-zA-Z][a-zA-Z0-9+\-.]*://', channel):
+        return channel
+    # SSH format
+    if channel.startswith('git@') or channel.startswith('ssh@'):
+        return channel
+    # Looks like user/repo (contains /, no spaces, doesn't start with / or .)
+    if '/' in channel and ' ' not in channel and not channel.startswith('/') and not channel.startswith('.'):
+        return channel
+    return ""
+
+
+def cmd_skills_show(project_dir: Path, channel: str = "") -> None:
+    """显示所有 skills 渠道中可用的 skill 列表
+
+    Args:
+        channel: 指定渠道名称，留空则显示全部
+                  支持 config.yaml 中的 name，或 user/repo / URL 格式
+    """
+    config = load_config(project_dir)
+    skills = config.get("skills", [])
+
+    if channel:
+        # 先尝试在 config.yaml 中匹配
+        matched = [s for s in skills if s.get("name") == channel]
+        if not matched:
+            # 不在配置中，尝试解析为 user/repo 或 URL
+            source = resolve_source(channel)
+            if source:
+                print(f"\n{'='*80}")
+                print(f"渠道: {channel} ({source})")
+                print("=" * 80)
+                cmd = ["npx", "skills", "add", source, "--list", "--yes"]
+                result = subprocess.run(cmd)
+                if result.returncode != 0:
+                    print(f"  [错误] 无法获取 {channel} 的技能列表")
+                return
+            else:
+                print(f"错误: 未找到渠道 '{channel}'，且格式不匹配 user/repo 或 URL")
+                print("可用渠道:", ", ".join(s.get("name", "") for s in skills))
+                sys.exit(1)
+        skills = matched
+
+    if not skills:
+        print("没有配置 skills")
+        return
+
+    for s in skills:
+        name = s.get("name", "")
+        url = s.get("url", "")
+        if not url:
+            continue
+
+        # 将 URL 转换为 npx skills add 格式 (owner/repo)
+        github_prefix = "https://github.com/"
+        if url.startswith(github_prefix):
+            source = url[len(github_prefix):]
+        else:
+            source = url
+
+        print(f"\n{'='*80}")
+        print(f"渠道: {name} ({source})")
+        print("=" * 80)
+
+        cmd = ["npx", "skills", "add", source, "--list", "--yes"]
+        result = subprocess.run(cmd)
+        if result.returncode != 0:
+            print(f"  [错误] 无法获取 {name} 的技能列表")
+            continue
+
+
+def cmd_skills_installed() -> None:
+    """列出已安装的 skills"""
+    result = subprocess.run(["npx", "skills", "list"])
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+
+def cmd_skills_find(query: str = "") -> None:
+    """搜索 skills"""
+    cmd = ["npx", "skills", "find"]
+    if query:
+        cmd.append(query)
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+
+def skills_add(channel: str, skill: str) -> None:
+    """通过 npx skills add 安装指定 skill
+
+    Args:
+        channel: skills/prompts 名称（对应 config.yaml 中的 name）
+        skill: 要安装的 skill 名称
+    """
+    project_dir = Path(__file__).parent.resolve()
+    config = load_config(project_dir)
+
+    # 在 skills 中查找
+    matched = None
+    for s in config.get("skills", []):
+        if s.get("name") == channel:
+            matched = s
+            break
+
+    # 在 prompts 中查找
+    if not matched:
+        for p in config.get("prompts", []):
+            if p.get("name") == channel:
+                matched = p
+                break
+
+    if not matched:
+        print(f"错误: 未找到 channel '{channel}'，请检查 config.yaml 中的 skills 或 prompts 配置")
+        sys.exit(1)
+
+    url = matched.get("url")
+    if not url:
+        print(f"错误: channel '{channel}' 缺少 url 字段")
+        sys.exit(1)
+
+    # 将 URL 转换为 npx skills add 格式 (owner/repo)
+    github_prefix = "https://github.com/"
+    if url.startswith(github_prefix):
+        source = url[len(github_prefix):]
+    else:
+        source = url
+
+    print(f"Channel: {channel}")
+    print(f"Source: {source}")
+    print(f"Skill: {skill}")
+    print()
+
+    cmd = ["npx", "skills", "add", source, "--skill", skill, "--yes"]
+    print(f"执行: {' '.join(cmd)}")
+    print()
+
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        sys.exit(result.returncode)
+
+
 def main():
     parser = argparse.ArgumentParser(description="AI Agents 配置安装工具")
-    parser.add_argument(
-        "action",
-        choices=["install", "setup-dir", "setup-skills", "setup-agents", "setup"],
-        help="执行的动作",
-    )
-    parser.add_argument(
-        "skill",
-        nargs="?",
-        help="指定要安装的 skill id（仅 install 动作有效）",
-    )
+    subparsers = parser.add_subparsers(dest="action", help="执行的动作")
+
+    # install
+    p_install = subparsers.add_parser("install", help="根据 config.yaml 安装工具")
+    p_install.add_argument("skill", nargs="?", help="指定要安装的 skill id")
+
+    # setup-dir
+    subparsers.add_parser("setup-dir", help="将当前目录链接至 ~/.agents")
+
+    # setup-skills
+    subparsers.add_parser("setup-skills", help="安装 skills 目录到各 AI 工具")
+
+    # setup-agents
+    subparsers.add_parser("setup-agents", help="安装 agents 配置文件到各 AI 工具")
+
+    # setup
+    subparsers.add_parser("setup", help="完整初始化（链接 + 安装 skills + 安装 agents）")
+
+    # skills list
+    subparsers.add_parser("skills-list", help="列出 config.yaml 中配置的 skills 源")
+
+    # prompts list
+    subparsers.add_parser("prompts-list", help="列出 config.yaml 中配置的 prompts 源")
+
+    # skills show
+    p_skills_show = subparsers.add_parser("skills-show", help="显示所有 skills 渠道中可用的 skill 列表")
+    p_skills_show.add_argument("channel", nargs="?", default="", help="指定渠道名称（对应 config.yaml 中的 name），留空则显示全部")
+
+    # skills installed
+    subparsers.add_parser("skills-installed", help="列出已安装的 skills")
+
+    # skills add
+    p_add = subparsers.add_parser("skills-add", help="通过 npx skills add 安装指定 skill")
+    p_add.add_argument("channel", help="channel 名称（对应 config.yaml 中的 name）")
+    p_add.add_argument("skill", help="要安装的 skill 名称")
+
+    # skills find
+    p_find = subparsers.add_parser("skills-find", help="搜索 skills")
+    p_find.add_argument("query", nargs="?", default="", help="搜索关键词")
 
     args = parser.parse_args()
+
+    if not args.action:
+        parser.print_help()
+        sys.exit(1)
+
     project_dir = Path(__file__).parent.resolve()
 
     if args.action == "install":
@@ -449,6 +666,18 @@ def main():
         setup_agents_config()
         print("")
         print("初始化完成！")
+    elif args.action == "skills-list":
+        cmd_skills_list(project_dir)
+    elif args.action == "prompts-list":
+        cmd_prompts_list(project_dir)
+    elif args.action == "skills-show":
+        cmd_skills_show(project_dir, args.channel)
+    elif args.action == "skills-installed":
+        cmd_skills_installed()
+    elif args.action == "skills-add":
+        skills_add(args.channel, args.skill)
+    elif args.action == "skills-find":
+        cmd_skills_find(args.query)
 
 
 if __name__ == "__main__":

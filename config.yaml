@@ -77,45 +77,119 @@ platforms:
     skills:
     agents: ATOMCODE.md
 
-# Skills 安装配置
-# 支持两种格式:
-# 1. run: shell 命令字符串（不跨平台）
-# 2. steps: 步骤列表（跨平台）
+# 工具安装配置
+# 每个 tool 条目支持以下字段:
+#   id:   工具唯一标识（必填）
+#   name: 显示名称（可选，默认同 id）
+#   env:  该工具专属环境变量（与全局 env 合并，支持 $ENV_VAR 替换）
+#   type: 资源类型（可选，默认 tool），取值:
+#         - skill: 作为 skills 安装到各平台配置的 skills 子目录
+#         - tool:  作为普通工具安装（默认）
+#   steps: 步骤列表（必填，跨平台，详见下方命令说明）。
+#         每个步骤可含可选 name 字段，用于说明该步骤。
+#         支持 run 步骤类型（见下），不再使用顶层 run 字段。
 #
-# steps 支持的命令:
-#   - download: 下载文件
+# steps 支持的命令（每个步骤可加 name: 说明）:
+#   - name: 步骤说明（可选）
+#     download: 下载文件
 #     - download: URL（支持 $ENV_VAR 替换）
 #     - dest: 保存到临时目录的文件名（默认从 URL 提取）
-#     - extract: 解压目标路径（默认 true，解压到 skills/）
-#                 true/false/路径字符串
+#     - extract: 解压目标路径。
+#                当 type 为 skill 时，缺省默认解压到 skills/ 文件夹；
+#                其他情况缺省为 true（同样映射到 skills/）。
+#                true/false/路径字符串
+#   - name: 步骤说明（可选）
+#     run: shell 命令行字符串（类似 GitHub Actions run:），直接执行
 #   - unzip: 解压 zip 文件（已弃用，建议用 download + extract）
 #   - copy: {src, dest}      复制文件/目录
 #   - move: {src, dest}      移动文件/目录
 #   - mkdir: {path}          创建目录
 #   - remove: {path}         删除文件/目录
 tools:
+  # skills：下载 MCP 工具包，type=skill 时 extract 默认解压到 skills/ 文件夹
+  # weiyun zip 内含 weiyun/ 顶层目录，解压到 skills/ 即得到 skills/weiyun/
   - id: weiyun
-    name: 微云 MCP 工具
+    name: 微云网盘 MCP 技能
+    type: skill
     env:
       URL: https://cdn.addon.tencentsuite.com/static/tencent-weiyun.zip
     steps:
-      - download: $URL
+      - name: 下载微云网盘 MCP 技能
+        download: $URL
         dest: tencent-weiyun.zip
+      # 兜底：确保最终位于 skills/weiyun（应对 zip 不含顶层目录的情况）
+      - name: 确保落地到 skills/weiyun
+        run: test -d skills/weiyun || mv skills/* skills/weiyun 2>/dev/null || true
+
+  # https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+  - id: ui-ux-pro-max-skill
+    name: UI UX Pro Max
+    type: tool
+    steps:
+      - name: 安装 UI UX Pro Max
+        run: |
+          npm install -g ui-ux-pro-max-cli
+      - name: 验证 UI UX Pro Max 安装状态
+        run: |
+          uipro --version
+
+  # https://github.com/github/spec-kit.git
+  - id: spec-kit
+    name: GitHub Spec Kit
+    steps:
+      - name: 安装 GitHub Spec Kit
+        run: |
+          uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+      - name: 验证 GitHub Spec Kit 安装状态
+        run: |
+          specify --version
+
+  - id: qoder
+    name: Qoder CLI
+    steps:
+      - name: 安装 Qoder CLI
+        run: |
+          curl -L https://qoder.com/install | bash
+      - name: 验证 Qoder CLI 安装状态
+        run: |
+          qodercli --version
+
+  # skills 示例：run 步骤与 download 步骤组合（run 作为 steps 内步骤类型）
+  # - id: example-skill
+  #   name: 示例 Skill
+  #   type: skill
+  #   steps:
+  #     - name: 准备安装
+  #       run: echo "准备安装示例 skill..."
+  #     - name: 下载并解压
+  #       download: https://example.com/skill.zip
+  #       dest: skill.zip
 
 skills:
   - name: antfu
     url: https://github.com/antfu/skills
-  - name: ui-ux-pro-max-skill
-    url: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
-  - name: superpowers
+  - name: obra
     url: https://github.com/obra/superpowers
   - name: mattpocock
     url: https://github.com/mattpocock/skills
-  - name: claude-code-skills
+    depth: 2
+  - name: julianobarbosa
     url: https://github.com/julianobarbosa/claude-code-skills
+  - name: addyosmani
+    url: https://github.com/addyosmani/agent-skills
 
 prompts:
   - name: f
     url: https://github.com/f/prompts.chat
   - name: system_prompts_leaks
     url: https://github.com/asgeirtj/system_prompts_leaks
+
+recommended:
+  - name: julianobarbosa
+    skills:
+      - mkdocs
+  - name: myself
+    url: https://git.asfd.cn/jetsung/skills.git
+    skills:
+      - git-commit
+      - update-gh-action-version

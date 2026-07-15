@@ -19,23 +19,25 @@
 ### 使用 just（推荐）
 
 ```bash
-just setup        # 完整初始化（链接目录 + 安装 skills + 安装 agents）
-just setup-dir    # 仅链接当前目录到 ~/.agents
-just setup-skills # 仅安装 skills 目录
-just setup-agents # 仅安装 agents 配置文件
-just install      # 安装所有技能
-just install weiyun  # 安装指定技能
+just setup          # 完整初始化（链接目录 + 安装 skills + 安装 agents）
+just setup-dir      # 仅链接当前目录到 ~/.agents
+just setup-skills   # 仅安装 skills 目录
+just setup-agents   # 仅安装 agents 配置文件
+just tools install --all   # 安装 config.yaml 中 tools 配置的全部工具
+just tools install weiyun  # 仅安装指定工具
+just skill-rec install --all  # 安装 config.yaml 中 skills.recommended 的全部推荐 skills
 ```
 
 ### 使用 Python 脚本
 
 ```bash
-python3 agents.py setup        # 完整初始化
-python3 agents.py setup-dir    # 仅链接目录
-python3 agents.py setup-skills # 仅安装 skills
-python3 agents.py setup-agents # 仅安装配置
-python3 agents.py install      # 安装所有技能
-python3 agents.py install weiyun  # 安装指定技能
+python3 agents.py setup          # 完整初始化
+python3 agents.py setup-dir      # 仅链接目录
+python3 agents.py setup-skills   # 仅安装 skills
+python3 agents.py setup-agents   # 仅安装配置
+python3 agents.py install        # 安装 tools 配置的全部工具
+python3 agents.py install weiyun # 仅安装指定工具
+python3 agents.py recommended    # 安装 skills.recommended 的全部推荐 skills
 ```
 
 ## 支持的 AI 工具
@@ -43,6 +45,7 @@ python3 agents.py install weiyun  # 安装指定技能
 | 工具 | Skills 目录 | 配置文件 |
 |------|-------------|----------|
 | Claude | `~/.claude/skills` | `~/.claude/CLAUDE.md` |
+| OpenClaude | `~/.openclaude/skills` | `~/.openclaude/CLAUDE.md` |
 | OpenCode | `~/.opencode/skills` | `~/.opencode/AGENTS.md` |
 | Codex | `~/.codex/skills` | `~/.codex/AGENTS.md` |
 | Qwen | `~/.qwen/skills` | `~/.qwen/AGENTS.md` |
@@ -53,6 +56,7 @@ python3 agents.py install weiyun  # 安装指定技能
 | Qoder | `~/.qoder/skills` | `~/.qoder/AGENTS.md` |
 | LangCLI | `~/.langcli/skills` | - |
 | Gemini | - | `~/.gemini/GEMINI.md` |
+| AtomCode | - | `~/.atomcode/ATOMCODE.md` |
 
 脚本会自动检测已安装的工具，并为每个工具创建软链接。如果目标已存在，脚本会自动备份。
 
@@ -76,14 +80,19 @@ python3 agents.py install weiyun  # 安装指定技能
 | `just setup-skills` | 同 `just setup skills` |
 | `just setup-agents` | 同 `just setup agents` |
 
-#### 安装工具/技能（install 组）
+#### 安装工具/技能（tools / skills 组）
 
 | 命令 | 说明 |
 |------|------|
-| `just install --rec` / `-r` | 安装 `config.yaml` 中 `recommended` 配置的推荐 skills |
-| `just install --all` / `-a` | 安装 `config.yaml` 中 `tools` 配置的全部工具 |
-| `just install <TOOLS_ID>` | 仅安装指定 `id` 的工具（如 `just install weiyun`） |
-| `just init` | 同 `just install --rec` |
+| `just tools install --all` / `-a` | 安装 `config.yaml` 中 `tools` 配置的全部工具 |
+| `just tools install <TOOLS_ID>` | 仅安装指定 `id` 的工具（如 `just tools install weiyun`） |
+| `just tools list --all` / `-a` | 列出全部 tools |
+| `just tools list <TOOLS_ID>` | 仅列出指定 id 的工具信息 |
+| `just skill-rec install --all` / `-a` | 安装 `config.yaml` 中 `skills.recommended` 配置的全部推荐 skills |
+| `just skill-rec install <SOURCE>` | 仅安装指定推荐来源（`name`/`url`）下的 skills |
+| `just skill-rec install <SKILL>` | 仅安装指定 skill 名称（跨推荐来源匹配） |
+| `just skill-rec list --all` / `-a` | 列出全部推荐来源 |
+| `just skill-rec list <SOURCE>` | 仅列出指定来源下的 skills |
 
 #### 列表（list 组）
 
@@ -156,13 +165,15 @@ python3 agents.py install weiyun  # 安装指定技能
 ├── AGENTS.md           # AI 代理行为配置
 ├── LICENSE             # Apache License 2.0
 └── skills/
-    ├── git-commit/                # git-commit 技能（来自 recommended）
+    ├── git-commit/                # git-commit 技能（来自 skills.recommended）
     └── update-gh-action-version/  # GitHub Actions 版本更新技能
 ```
 
 ## 配置文件说明
 
-配置文件 `config.yaml` 由以下顶层字段组成：`env`、`platforms`、`tools`、`skills`、`prompts`、`recommended`。
+配置文件 `config.yaml` 由以下顶层字段组成：`env`、`platforms`、`tools`、`skills`、`prompts`。
+
+> 注：`skills` 为嵌套结构，内含 `channels`（skill 渠道列表）与 `recommended`（推荐安装来源列表）。
 
 ### env（全局环境变量）
 
@@ -237,26 +248,55 @@ tools:
 
 ### skills（Skills 渠道）
 
-可供 `skill-show` / `skill-add` / `skill-query` 使用的 skill 仓库渠道。
+`skills` 为嵌套结构，内含 `channels`（可供 `skill-show` / `skill-add` / `skill-query` 使用的 skill 仓库渠道）与 `recommended`（推荐安装来源列表，供 `just skill-rec install` 使用）。
+
+#### skills.channels
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `name` | string | 是 | 渠道名称（用于各 skill 命令的 `<channel>` 参数） |
+| `name` | string | 是 | 渠道名称（用于各 skill 命令的 `<channel>` 参数，也是 `skill-add` 的匹配键） |
 | `url` | string | 是 | 仓库地址，支持 GitHub、GitLab、自建等任意 git 平台 |
 | `depth` | int | 否 | skill 相对 `skills/` 的嵌套层级，默认 `1`（`skills/<skill>`）；`2` 表示 `skills/<分类>/<skill>` 两层布局 |
 
 ```yaml
 skills:
-  - name: antfu
-    url: https://github.com/antfu/skills
-  - name: mattpocock
-    url: https://github.com/mattpocock/skills
-    depth: 2          # 两层布局：skills/<分类>/<skill>
+  channels:
+    - name: antfu
+      url: https://github.com/antfu/skills
+    - name: mattpocock
+      url: https://github.com/mattpocock/skills
+      depth: 2          # 两层布局：skills/<分类>/<skill>
+```
+
+#### skills.recommended
+
+列出默认推荐安装的 skills，支持两种形式：
+
+- **引用 channels 渠道**：`name`（对应 `skills.channels[].name`） + `skills` 列表。
+- **直链仓库**：`url`（完整仓库地址，优先级最高） + `skills` 列表。
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `name` | string | 二选一 | 引用的 channels 渠道名称 |
+| `url` | string | 二选一 | 直链的技能仓库地址 |
+| `skills` | list | 是 | 要安装的 skill 名称列表（相对仓库 `skills/` 的路径） |
+
+```yaml
+skills:
+  recommended:
+    - name: julianobarbosa        # 引用 channels 渠道
+      skills:
+        - mkdocs
+    - name: myself
+      url: https://git.asfd.cn/jetsung/skills.git   # 直链仓库
+      skills:
+        - git-commit
+        - update-gh-action-version
 ```
 
 ### prompts（Prompts 渠道）
 
-与 `skills` 结构一致，用于管理各平台的 Prompt 指令源。
+与 `skills.channels` 结构一致，用于管理各平台的 Prompt 指令源。
 
 ```yaml
 prompts:
@@ -264,31 +304,6 @@ prompts:
     url: https://github.com/f/prompts.chat
   - name: system_prompts_leaks
     url: https://github.com/asgeirtj/system_prompts_leaks
-```
-
-### recommended（推荐安装）
-
-列出默认推荐安装的 skills，支持两种形式：
-
-- **引用 skills 渠道**：`name`（对应 `skills[].name`）+ `skills` 列表。
-- **直链仓库**：`url`（完整仓库地址）+ `skills` 列表。
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `name` | string | 二选一 | 引用的 skills 渠道名称 |
-| `url` | string | 二选一 | 直链的技能仓库地址 |
-| `skills` | list | 是 | 要安装的 skill 名称列表（相对仓库 `skills/` 的路径） |
-
-```yaml
-recommended:
-  - name: julianobarbosa        # 引用 skills 渠道
-    skills:
-      - mkdocs
-  - name: myself
-    url: https://git.asfd.cn/jetsung/skills.git   # 直链仓库
-    skills:
-      - git-commit
-      - update-gh-action-version
 ```
 
 ## 添加新技能

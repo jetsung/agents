@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git.asfd.cn/jetsung/agents/raw/branch/main/config.schema.json",
+  "title": "agents config",
+  "description": "Schema for the multi-platform agent/tool installer configuration",
+  "type": "object",
+  "required": ["env", "platforms", "tools", "skills", "prompts"],
+  "additionalProperties": true,
+  "properties": {
+    "env": {
+      "type": "object",
+      "description": "全局环境变量，与各工具专属 env 合并",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "platforms": {
+      "type": "object",
+      "description": "工具平台配置：path 为工具配置目录，skills/agents 为子目录或文件名",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path"],
+        "additionalProperties": true,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "工具配置目录"
+          },
+          "skills": {
+            "type": ["string", "null"],
+            "description": "skills 子目录名（相对于 path），为空则不安装"
+          },
+          "agents": {
+            "type": ["string", "null"],
+            "description": "agents 配置文件名（相对于 path），为空则不安装"
+          },
+          "source": {
+            "type": "string",
+            "description": "agents 源文件名，默认为 AGENTS.md"
+          }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "description": "工具安装配置列表",
+      "items": {
+        "type": "object",
+        "required": ["id", "steps"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "工具唯一标识（必填）"
+          },
+          "name": {
+            "type": "string",
+            "description": "显示名称（可选，默认同 id）"
+          },
+          "env": {
+            "type": "object",
+            "description": "该工具专属环境变量，支持 $ENV_VAR 替换",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "type": "string",
+            "enum": ["skill", "tool"],
+            "default": "tool",
+            "description": "资源类型：skill 作为 skills 安装，tool 为普通工具（默认）"
+          },
+          "steps": {
+            "type": "array",
+            "description": "步骤列表（跨平台）",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "步骤说明（可选）"
+                },
+                "download": {
+                  "type": "string",
+                  "description": "下载文件的 URL（支持 $ENV_VAR 替换）"
+                },
+                "dest": {
+                  "type": "string",
+                  "description": "保存到临时目录的文件名（默认从 URL 提取）"
+                },
+                "extract": {
+                  "description": "解压目标路径：true/false/路径字符串。type=skill 时默认解压到 skills/；其他默认 true",
+                  "anyOf": [
+                    { "type": "boolean" },
+                    { "type": "string" }
+                  ]
+                },
+                "run": {
+                  "type": "string",
+                  "description": "shell 命令行字符串，直接执行"
+                },
+                "unzip": {
+                  "type": "string",
+                  "description": "解压 zip 文件（已弃用，建议用 download + extract）"
+                },
+                "copy": {
+                  "type": "object",
+                  "properties": {
+                    "src": { "type": "string" },
+                    "dest": { "type": "string" }
+                  },
+                  "required": ["src", "dest"]
+                },
+                "move": {
+                  "type": "object",
+                  "properties": {
+                    "src": { "type": "string" },
+                    "dest": { "type": "string" }
+                  },
+                  "required": ["src", "dest"]
+                },
+                "mkdir": {
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "string" }
+                  },
+                  "required": ["path"]
+                },
+                "remove": {
+                  "type": "object",
+                  "properties": {
+                    "path": { "type": "string" }
+                  },
+                  "required": ["path"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "description": "Skills 配置（嵌套结构）：channels 为 skill 渠道，recommended 为推荐安装来源",
+      "additionalProperties": true,
+      "properties": {
+        "channels": {
+          "type": "array",
+          "description": "skill 渠道列表，用于 skill-list / skill-show / skill-add / skill-query",
+          "items": {
+            "type": "object",
+            "required": ["name", "url"],
+            "additionalProperties": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "渠道唯一标识（必填，skill-add 按此匹配）"
+              },
+              "url": {
+                "type": "string",
+                "description": "仓库地址（必填）"
+              },
+              "depth": {
+                "type": "integer",
+                "description": "skill 相对 skills/ 的嵌套层级（可选，默认 1；2 表示 skills/<分类>/<skill>）"
+              }
+            }
+          }
+        },
+        "recommended": {
+          "type": "array",
+          "description": "推荐安装来源列表（just init 安装）",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "推荐项名称：引用 channels 中同名渠道的 url，或与 url 二选一"
+              },
+              "url": {
+                "type": "string",
+                "description": "直接给出仓库地址（优先级最高，与 name 二选一）"
+              },
+              "skills": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "需要安装的具体 skill 名称列表"
+              }
+            }
+          }
+        }
+      }
+    },
+    "prompts": {
+      "type": "array",
+      "description": "prompts 仓库列表",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "prompts 仓库名称"
+          },
+          "url": {
+            "type": "string",
+            "description": "git 仓库地址"
+          }
+        }
+      }
+    }
+  }
+}

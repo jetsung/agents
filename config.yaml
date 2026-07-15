@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=config.schema.json
 env:
   HELLO: WORLD
 
@@ -165,18 +166,39 @@ tools:
   #       download: https://example.com/skill.zip
   #       dest: skill.zip
 
+# Skills 配置（嵌套结构）
+# skills.channels:  skill 渠道列表，用于 skill-list / skill-show / skill-add / skill-query
+#   - name:  渠道唯一标识（必填，skill-add 按此匹配）
+#   - url:   仓库地址（必填）
+#   - depth: skill 相对 skills/ 的嵌套层级（可选，默认 1；
+#            2 表示 skills/<分类>/<skill>，需按完整路径安装）
+# skills.recommended: 推荐安装来源列表（just init 安装）
+#   每个条目二选一指定来源：
+#     - url:  直接给出仓库地址（优先级最高）
+#     - name: 引用 channels 中同名渠道的 url
+#   并通过 skills: 列出要安装的具体 skill 名称
 skills:
-  - name: antfu
-    url: https://github.com/antfu/skills
-  - name: obra
-    url: https://github.com/obra/superpowers
-  - name: mattpocock
-    url: https://github.com/mattpocock/skills
-    depth: 2
-  - name: julianobarbosa
-    url: https://github.com/julianobarbosa/claude-code-skills
-  - name: addyosmani
-    url: https://github.com/addyosmani/agent-skills
+  channels:
+    - name: antfu
+      url: https://github.com/antfu/skills
+    - name: obra
+      url: https://github.com/obra/superpowers
+    - name: mattpocock
+      url: https://github.com/mattpocock/skills
+      depth: 2
+    - name: julianobarbosa
+      url: https://github.com/julianobarbosa/claude-code-skills
+    - name: addyosmani
+      url: https://github.com/addyosmani/agent-skills
+  recommended:
+    - name: julianobarbosa
+      skills:
+        - mkdocs
+    - name: myself
+      url: https://git.asfd.cn/jetsung/skills.git
+      skills:
+        - git-commit
+        - update-gh-action-version
 
 prompts:
   - name: f
@@ -184,12 +206,4 @@ prompts:
   - name: system_prompts_leaks
     url: https://github.com/asgeirtj/system_prompts_leaks
 
-recommended:
-  - name: julianobarbosa
-    skills:
-      - mkdocs
-  - name: myself
-    url: https://git.asfd.cn/jetsung/skills.git
-    skills:
-      - git-commit
-      - update-gh-action-version
+

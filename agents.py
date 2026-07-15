@@ -435,6 +435,7 @@ def install_skills(project_dir: Path, skill_filter: str = None):
         else:
             print(f'Tool "{tool_name}" 安装完成')
         print()
+        print("-" * 80)
 
     suffix = f" (过滤: {skill_filter})" if skill_filter else ""
     if has_skill and not has_tool:
@@ -449,18 +450,34 @@ def install_skills(project_dir: Path, skill_filter: str = None):
 # ==================== 主函数 ====================
 
 
+def get_skills_config(config: dict) -> tuple:
+    """从 config.yaml 解析 skills 模块，返回 (recommended, channels) 二元组
+
+    结构约定：skills 为字典，含 `recommended`（推荐来源列表）与
+    `channels`（渠道列表）两个子键。
+
+    Returns:
+        (recommended_list, channels_list)，缺失时各自回退为空列表。
+    """
+    skills = config.get("skills", {})
+    recommended = skills.get("recommended", []) or []
+    channels = skills.get("channels", []) or []
+
+    return recommended, channels
+
+
 def cmd_skills_list(project_dir: Path) -> None:
     """列出 config.yaml 中配置的 skills 源"""
     config = load_config(project_dir)
-    skills = config.get("skills", [])
+    _, channels = get_skills_config(config)
 
-    if not skills:
+    if not channels:
         print("没有配置 skills")
         return
 
     print(f'{"名称":<20} {"URL":<45} depth')
     print("-" * 80)
-    for s in skills:
+    for s in channels:
         print(f'{s["name"]:<20} {s["url"]:<45} {s.get("depth", 1)}')
 
 
@@ -480,7 +497,7 @@ def cmd_prompts_list(project_dir: Path) -> None:
 
 
 def resolve_source(channel: str) -> str:
-    """判断 channel 是否为 user/repo 格式或 URL，返回可直接用于 npx skills add 的源
+    """判断 channel 是否为 user/repo 格式或 URL，返回可直接用于 git clone 的源
 
     支持格式:
     - user/repo (GitHub 等)
@@ -645,7 +662,7 @@ def query_skill(project_dir: Path, skill: str, channel: str = "") -> None:
         channel: 可选渠道（config name / ORG/REPO / URL）；留空则跨所有渠道
     """
     config = load_config(project_dir)
-    skills = config.get("skills", [])
+    _, channels = get_skills_config(config)
 
     # 从 list_skills_from_repo 的结果里过滤出匹配 skill 的项
     # name 已优先取 SKILL.md 的 name，回退为目录名，故精确比较 name 即可
@@ -655,17 +672,17 @@ def query_skill(project_dir: Path, skill: str, channel: str = "") -> None:
     found_any = False
 
     if channel:
-        source = resolve_show_source(channel, skills)
-        items = list_skills_from_repo(source, _channel_depth(channel, skills))
+        source = resolve_show_source(channel, channels)
+        items = list_skills_from_repo(source, _channel_depth(channel, channels))
         hits = _match(items)
         if hits:
             found_any = True
             _print_skill_list(hits)
     else:
-        if not skills:
+        if not channels:
             print("没有配置 skills")
             return
-        for s in skills:
+        for s in channels:
             name = s.get("name", "")
             url = s.get("url")
             if not url:
@@ -698,7 +715,7 @@ def cmd_skills_show(project_dir: Path, channel: str = "", all: bool = False) -> 
         all: 为 True 时列出 config.yaml skills 模块所有渠道的 skill
     """
     config = load_config(project_dir)
-    skills = config.get("skills", [])
+    _, channels = get_skills_config(config)
 
     # 无参数且无 --all → 显示用法帮助
     if not channel and not all:
@@ -709,10 +726,10 @@ def cmd_skills_show(project_dir: Path, channel: str = "", all: bool = False) -> 
         return
 
     if all:
-        if not skills:
+        if not channels:
             print("没有配置 skills")
             return
-        for s in skills:
+        for s in channels:
             name = s.get("name", "")
             url = s.get("url")
             if not url:
@@ -845,14 +862,24 @@ def cmd_skills_find(query: str = "") -> None:
         sys.exit(result.returncode)
 
 
-def cmd_tools_list(project_dir: Path) -> None:
-    """列出 config.yaml 中配置的 tools"""
+def cmd_tools_list(project_dir: Path, tool_id: str = None) -> None:
+    """列出 config.yaml 中配置的 tools
+
+    Args:
+        tool_id: 可选工具 id，传入时仅显示该工具信息。
+    """
     config = load_config(project_dir)
     tools = config.get("tools", [])
 
     if not tools:
         print("没有配置 tools")
         return
+
+    if tool_id:
+        tools = [t for t in tools if t.get("id") == tool_id]
+        if not tools:
+            print(f"错误: 未找到 id 为 '{tool_id}' 的工具")
+            sys.exit(1)
 
     print(f'{"ID":<20} {"名称":<20} 类型')
     print("-" * 80)
@@ -1089,9 +1116,10 @@ def skills_add(channel: str, skill: str) -> None:
     project_dir = Path(__file__).parent.resolve()
     config = load_config(project_dir)
 
-    # 在 skills 中查找
+    # 在 skills 渠道中查找
+    _, channels = get_skills_config(config)
     matched = None
-    for s in config.get("skills", []):
+    for s in channels:
         if s.get("name") == channel:
             matched = s
             break
@@ -1167,15 +1195,56 @@ def resolve_recommended_source(item: dict, skills: list) -> str:
     return None
 
 
-def install_recommended(project_dir: Path) -> None:
-    """根据 config.yaml 的 recommended 模块安装推荐 skills"""
+def _match_recommended_source(item: dict, source: str) -> bool:
+    """判断推荐来源条目是否匹配给定的 source 名称/url"""
+    name = item.get("name")
+    url = item.get("url")
+    if name and name == source:
+        return True
+    if url:
+        # 兼容 url 末尾路径名匹配（如 git.asfd.cn/jetsung/skills.git -> skills）
+        tail = url.rstrip("/").split("/")[-1]
+        if tail == source or url == source:
+            return True
+    return False
+
+
+def install_recommended(project_dir: Path, source: str = None) -> None:
+    """根据 config.yaml 的 recommended 模块安装推荐 skills
+
+    Args:
+        source: 可选筛选条件，按以下顺序匹配：
+            1. 推荐来源名（name 或 url 末尾路径名）→ 安装该来源下全部 skills；
+            2. 某来源下包含的 skill 名 → 仅安装该 skill（自动反查所属来源）。
+            缺省则安装全部来源。
+    """
     config = load_config(project_dir)
-    recommended = config.get("recommended", [])
-    skills = config.get("skills", [])
+    recommended, skills = get_skills_config(config)
 
     if not recommended:
         print("没有配置 recommended")
         return
+
+    # 仅安装某来源下的单个 skill（按 skill 名反查）
+    only_skill = None
+
+    if source:
+        matched = [it for it in recommended if _match_recommended_source(it, source)]
+        if not matched:
+            # 未命中来源名 → 尝试按 skill 名匹配（任一来源的 skills 中含该名）
+            skill_hits = [
+                it for it in recommended
+                if source in it.get("skills", [])
+            ]
+            if skill_hits:
+                matched = skill_hits
+                only_skill = source
+            else:
+                names = "、".join(it.get("name") or it.get("url") for it in recommended)
+                print(f"错误: 未找到推荐来源或 skill '{source}'")
+                print(f"可用来源: {names}")
+                sys.exit(1)
+        recommended = matched
 
     print(f"开始安装 {len(recommended)} 个推荐来源...\n")
 
@@ -1187,9 +1256,9 @@ def install_recommended(project_dir: Path) -> None:
             continue
 
         display_name = name or url
-        source = resolve_recommended_source(item, skills)
+        src = resolve_recommended_source(item, skills)
 
-        if not source:
+        if not src:
             print(f"[跳过] {display_name}: 无有效来源（url 缺失，且 skills 模块无对应渠道）")
             continue
 
@@ -1198,13 +1267,48 @@ def install_recommended(project_dir: Path) -> None:
             print(f"[跳过] {name}: 无 skills 列表")
             continue
 
+        # 按 skill 名筛选时，仅安装命中的 skill
+        target_skills = [only_skill] if only_skill else item_skills
+
         print(f"来源: {display_name}")
-        for skill in item_skills:
-            git_clone_skill(source, skill)
+        for skill in target_skills:
+            git_clone_skill(src, skill)
         print()
         print("-" * 80)
 
     print("推荐 skills 安装完成")
+
+
+def cmd_recommended_list(project_dir: Path, source: str = None) -> None:
+    """列出 config.yaml 中 skills.recommended 的推荐来源及其 skill
+
+    Args:
+        source: 可选推荐来源名（按 name 或 url 匹配）。缺省列出全部来源。
+    """
+    config = load_config(project_dir)
+    recommended, _ = get_skills_config(config)
+
+    if not recommended:
+        print("没有配置 recommended")
+        return
+
+    if source:
+        matched = [it for it in recommended if _match_recommended_source(it, source)]
+        if not matched:
+            names = "、".join(it.get("name") or it.get("url") for it in recommended)
+            print(f"错误: 未找到推荐来源 '{source}'")
+            print(f"可用来源: {names}")
+            sys.exit(1)
+        recommended = matched
+
+    print(f'{"来源":<20} {"URL":<45} skills')
+    print("-" * 80)
+    for item in recommended:
+        name = item.get("name") or ""
+        url = item.get("url") or ""
+        skills = item.get("skills", [])
+        skills_str = ", ".join(skills) if skills else "（无）"
+        print(f"{name:<20} {url:<45} {skills_str}")
 
 
 def main():
@@ -1214,10 +1318,9 @@ def main():
     # install
     p_install = subparsers.add_parser(
         "install",
-        help="安装工具：--rec/-r 推荐、--all/-a 全部、或指定 TOOLS ID",
+        help="安装 tools：--all/-a 全部、或指定 TOOLS ID",
     )
     install_grp = p_install.add_mutually_exclusive_group(required=True)
-    install_grp.add_argument("-r", "--rec", action="store_true", help="安装 config.yaml 中 recommended 的推荐 skills")
     install_grp.add_argument("-a", "--all", action="store_true", help="安装 config.yaml 中的全部 tools")
     install_grp.add_argument("skill", nargs="?", help="指定要安装的 TOOLS ID")
 
@@ -1249,7 +1352,7 @@ def main():
     p_installed.add_argument("-a", "--all", action="store_true", help="同时显示每个 skill 的 name/description/version")
 
     # skills add
-    p_add = subparsers.add_parser("skills-add", help="通过 npx skills add 安装指定 skill")
+    p_add = subparsers.add_parser("skills-add", help="通过 git clone + sparse-checkout 安装指定 skill")
     p_add.add_argument("channel", help="channel 名称（对应 config.yaml 中的 name）")
     p_add.add_argument("skill", help="要安装的 skill 名称")
 
@@ -1273,7 +1376,25 @@ def main():
     p_list.add_argument("kind", nargs="?", default="", help="列表类型: skills / prompts / skill / tools")
 
     # recommended
-    subparsers.add_parser("recommended", help="根据 config.yaml 的 recommended 模块安装推荐 skills")
+    p_recommended = subparsers.add_parser(
+        "recommended",
+        help="安装 config.yaml 的 skills.recommended 推荐 skills（可选 <source> 指定来源）",
+    )
+    p_recommended.add_argument("source", nargs="?", default="", help="可选推荐来源名（name 或 url），缺省安装全部")
+
+    # recommended-list
+    p_rec_list = subparsers.add_parser(
+        "recommended-list",
+        help="列出 config.yaml 的 skills.recommended 推荐来源及其 skill",
+    )
+    p_rec_list.add_argument("source", nargs="?", default="", help="可选推荐来源名，缺省列出全部")
+
+    # tools-list
+    p_tools_list = subparsers.add_parser(
+        "tools-list",
+        help="列出 config.yaml 中配置的 tools（可选 <id> 指定单个工具）",
+    )
+    p_tools_list.add_argument("tool_id", nargs="?", default="", help="可选工具 id，缺省列出全部")
 
     args = parser.parse_args()
 
@@ -1284,14 +1405,9 @@ def main():
     project_dir = Path(__file__).parent.resolve()
 
     if args.action == "install":
-        if args.rec:
-            install_recommended(project_dir)
-        elif args.all:
+        if args.all:
             install_skills(project_dir, None)
         else:
-            if args.skill == "rec":
-                print("请使用 --rec 或 -r 安装推荐 skills")
-                sys.exit(1)
             install_skills(project_dir, args.skill)
     elif args.action == "setup-dir":
         create_agents_dir_link()
@@ -1324,7 +1440,11 @@ def main():
     elif args.action == "list":
         cmd_list(args.kind)
     elif args.action == "recommended":
-        install_recommended(project_dir)
+        install_recommended(project_dir, args.source or None)
+    elif args.action == "recommended-list":
+        cmd_recommended_list(project_dir, args.source or None)
+    elif args.action == "tools-list":
+        cmd_tools_list(project_dir, args.tool_id or None)
 
 
 if __name__ == "__main__":

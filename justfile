@@ -1,26 +1,70 @@
 # AI Agents 配置安装工具
 # 使用方法: just <command> [args]
-# 示例: just install / just setup / just setup-dir
+# 示例: just tools install / just skill-rec install / just setup / just setup-dir
 
 set shell := ["python3", "-c"]
 
-# ==================== 安装 (install) ====================
+# ==================== 工具安装 (tools) ====================
 
-# 安装工具（必带参数）:
-#   just install --rec / -r      安装 config.yaml 中 recommended 的推荐 skills
-#   just install --all  / -a      安装全部 tools
-#   just install <TOOLS_ID>       仅安装指定 id 的 tool
-#   just install                  显示用法说明（不安装）
-[group('install')]
-install ARGS='':
+# just tools install --all / -a   安装 config.yaml 中全部 tools
+# just tools install <TOOLS_ID>   仅安装指定 id 的 tool
+# just tools list  --all / -a     列出全部 tools
+# just tools list  <TOOLS_ID>     仅列出指定 id 的工具信息
+[group('tools')]
+tools *ARGS:
     #!/bin/bash
-    python3 agents.py install {{ARGS}}
+    set -- {{ARGS}}
+    sub="${1:-}"; shift || true
+    case "$sub" in
+        install)
+            python3 agents.py install "$@"
+            ;;
+        list)
+            python3 agents.py tools-list "$@"
+            ;;
+        *)
+            echo "用法: just tools <install|list> [--all|-a|<TOOLS_ID>]"
+            exit 1
+            ;;
+    esac
 
-# 安装 config.yaml 中的推荐 skills: just init
-[group('install')]
-init:
+# ==================== 推荐 skills 安装 (skill-rec) ====================
+
+# just skill-rec install --all / -a   安装全部推荐来源下的 skills
+# just skill-rec install <SOURCE>     仅安装指定推荐来源（name/url）下的 skills
+# just skill-rec list  --all / -a     列出全部推荐来源
+# just skill-rec list  <SOURCE>       仅列出指定来源下的 skills
+[group('skills')]
+skill-rec *ARGS:
     #!/bin/bash
-    python3 agents.py recommended
+    set -- {{ARGS}}
+    sub="${1:-}"; shift || true
+    case "$sub" in
+        install)
+            # 必须带参数：--all/-a 安装全部；来源名/skill 名安装指定
+            if [ -z "$*" ]; then
+                echo "用法: just skill-rec install [--all|-a|<SOURCE>|<SKILL>]"
+                exit 1
+            fi
+            if [[ "$*" == *"--all"* ]] || [[ "$*" == *"-a"* ]]; then
+                python3 agents.py recommended
+            else
+                python3 agents.py recommended "$*"
+            fi
+            ;;
+        list)
+            # 无参列出全部；否则列出指定来源
+            if [ -z "$*" ]; then
+                python3 agents.py recommended-list
+            else
+                python3 agents.py recommended-list "$*"
+            fi
+            ;;
+        *)
+            echo "用法: just skill-rec <install|list> [--all|-a|<SOURCE>|<SKILL>]"
+            exit 1
+            ;;
+    esac
 
 # ==================== 初始化 (setup) ====================
 

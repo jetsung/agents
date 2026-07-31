@@ -4,78 +4,63 @@ env:
 
 # 工具平台配置
 # path: 工具配置目录
-# skills: skills 子目录名（相对于 path），为空则不安装
 # agents: agents 配置文件名（相对于 path），为空则不安装
 # source: agents 源文件名，默认为 AGENTS.md
 platforms:
   claude:
     path: ~/.claude
-    skills: skills
     agents: CLAUDE.md
 
   openclaude:
     path: ~/.openclaude
-    skills: skills
     agents: CLAUDE.md
 
   opencode:
     path: ~/.opencode
-    skills: skills
     agents: AGENTS.md
 
   codex:
     path: ~/.codex
-    skills: skills
     agents: AGENTS.md
 
   qwen:
     path: ~/.qwen
-    skills: skills
     agents: AGENTS.md
 
   codebuddy:
     path: ~/.codebuddy
-    skills: skills
     agents: CODEBUDDY.md
 
   cline:
     path: ~/.cline
-    skills: skills
     agents: CLAUDE.md
 
   # kilo:
   #   path: ~/.kilocode
-  #   skills: skills  # kilo 可直接使用 ~/.agents/skills
   #   agents: AGENTS.md
 
   roo:
     path: ~/.roo
-    skills: skills
     agents: AGENTS.md
 
   factory:
     path: ~/.factory
-    skills: skills
     agents: AGENTS.md
 
   qoder:
     path: ~/.qoder
-    skills: skills
     agents: AGENTS.md
 
   langcli:
     path: ~/.langcli
-    skills: skills
     agents:
 
   gemini:
     path: ~/.gemini
-    skills:
     agents: GEMINI.md
 
   atomcode:
     path: ~/.atomcode
-    skills:
     agents: ATOMCODE.md
 
 # 工具安装配置
@@ -84,7 +69,7 @@ platforms:
 #   name: 显示名称（可选，默认同 id）
 #   env:  该工具专属环境变量（与全局 env 合并，支持 $ENV_VAR 替换）
 #   type: 资源类型（可选，默认 tool），取值:
-#         - skill: 作为 skills 安装到各平台配置的 skills 子目录
+#         - skill: 作为 skill 解压到项目内 skills/ 目录
 #         - tool:  作为普通工具安装（默认）
 #   steps: 步骤列表（必填，跨平台，详见下方命令说明）。
 #         每个步骤可含可选 name 字段，用于说明该步骤。
@@ -165,45 +150,3 @@ tools:
   #     - name: 下载并解压
   #       download: https://example.com/skill.zip
   #       dest: skill.zip
-
-# Skills 配置（嵌套结构）
-# skills.channels:  skill 渠道列表，用于 skill-list / skill-show / skill-add / skill-query
-#   - name:  渠道唯一标识（必填，skill-add 按此匹配）
-#   - url:   仓库地址（必填）
-#   - depth: skill 相对 skills/ 的嵌套层级（可选，默认 1；
-#            2 表示 skills/<分类>/<skill>，需按完整路径安装）
-# skills.recommended: 推荐安装来源列表（just init 安装）
-#   每个条目二选一指定来源：
-#     - url:  直接给出仓库地址（优先级最高）
-#     - name: 引用 channels 中同名渠道的 url
-#   并通过 skills: 列出要安装的具体 skill 名称
-skills:
-  channels:
-    - name: antfu
-      url: https://github.com/antfu/skills
-    - name: obra
-      url: https://github.com/obra/superpowers
-    - name: mattpocock
-      url: https://github.com/mattpocock/skills
-      depth: 2
-    - name: julianobarbosa
-      url: https://github.com/julianobarbosa/claude-code-skills
-    - name: addyosmani
-      url: https://github.com/addyosmani/agent-skills
-  recommended:
-    - name: julianobarbosa
-      skills:
-        - mkdocs
-    - name: myself
-      url: https://git.asfd.cn/jetsung/skills.git
-      skills:
-        - git-commit
-        - update-gh-action-version
-
-prompts:
-  - name: f
-    url: https://github.com/f/prompts.chat
-  - name: system_prompts_leaks
-    url: https://github.com/asgeirtj/system_prompts_leaks
-
-

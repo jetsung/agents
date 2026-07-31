@@ -4,7 +4,7 @@
   "title": "agents config",
   "description": "Schema for the multi-platform agent/tool installer configuration",
   "type": "object",
-  "required": ["env", "platforms", "tools", "skills", "prompts"],
+  "required": ["env", "platforms", "tools"],
   "additionalProperties": true,
   "properties": {
     "env": {
@@ -16,7 +16,7 @@
     },
     "platforms": {
       "type": "object",
-      "description": "工具平台配置：path 为工具配置目录，skills/agents 为子目录或文件名",
+      "description": "工具平台配置：path 为工具配置目录，agents 为配置文件名",
       "additionalProperties": {
         "type": "object",
         "required": ["path"],
@@ -25,10 +25,6 @@
           "path": {
             "type": "string",
             "description": "工具配置目录"
-          },
-          "skills": {
-            "type": ["string", "null"],
-            "description": "skills 子目录名（相对于 path），为空则不安装"
           },
           "agents": {
             "type": ["string", "null"],
@@ -68,7 +64,7 @@
             "type": "string",
             "enum": ["skill", "tool"],
             "default": "tool",
-            "description": "资源类型：skill 作为 skills 安装，tool 为普通工具（默认）"
+            "description": "资源类型：skill 作为 skill 解压到项目内 skills/ 目录，tool 为普通工具（默认）"
           },
           "steps": {
             "type": "array",
@@ -136,78 +132,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "skills": {
-      "type": "object",
-      "description": "Skills 配置（嵌套结构）：channels 为 skill 渠道，recommended 为推荐安装来源",
-      "additionalProperties": true,
-      "properties": {
-        "channels": {
-          "type": "array",
-          "description": "skill 渠道列表，用于 skill-list / skill-show / skill-add / skill-query",
-          "items": {
-            "type": "object",
-            "required": ["name", "url"],
-            "additionalProperties": true,
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "渠道唯一标识（必填，skill-add 按此匹配）"
-              },
-              "url": {
-                "type": "string",
-                "description": "仓库地址（必填）"
-              },
-              "depth": {
-                "type": "integer",
-                "description": "skill 相对 skills/ 的嵌套层级（可选，默认 1；2 表示 skills/<分类>/<skill>）"
-              }
-            }
-          }
-        },
-        "recommended": {
-          "type": "array",
-          "description": "推荐安装来源列表（just init 安装）",
-          "items": {
-            "type": "object",
-            "additionalProperties": true,
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "推荐项名称：引用 channels 中同名渠道的 url，或与 url 二选一"
-              },
-              "url": {
-                "type": "string",
-                "description": "直接给出仓库地址（优先级最高，与 name 二选一）"
-              },
-              "skills": {
-                "type": "array",
-                "items": { "type": "string" },
-                "description": "需要安装的具体 skill 名称列表"
-              }
-            }
-          }
-        }
-      }
-    },
-    "prompts": {
-      "type": "array",
-      "description": "prompts 仓库列表",
-      "items": {
-        "type": "object",
-        "required": ["name", "url"],
-        "additionalProperties": true,
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "prompts 仓库名称"
-          },
-          "url": {
-            "type": "string",
-            "description": "git 仓库地址"
           }
         }
       }

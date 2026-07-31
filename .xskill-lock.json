@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "git-commit": {
+      "source": "github",
+      "source_type": "git",
+      "source_url": "https://gitcode.com/GitHub_Trending/aw/awesome-copilot.git",
+      "skill_path": "skills/git-commit/SKILL.md",
+      "skill_folder_hash": "883a6a7466f55a9cd9f22cf1cce2d9333fc9b998",
+      "installed_at": "2026-07-31T10:55:51.968Z",
+      "updated_at": "2026-07-31T10:55:51.968Z"
+    }
+  },
+  "updated_at": "2026-07-31T10:55:51.968Z"
+}

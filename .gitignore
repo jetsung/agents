@@ -11,3 +11,4 @@ agentskills/
 skills/*
 .skill-lock.json
 skills-lock.json
+.xskill-lock.json

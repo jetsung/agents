@@ -6,8 +6,7 @@
 
 ## 依赖
 
-- Python 3.x
-- PyYAML (`pip install pyyaml`)
+- [uv](https://docs.astral.sh/uv/)（Python 包管理器，用于运行脚本）
 - [just](https://github.com/casey/just)（可选，用于便捷命令）
 
 ## 核心内容
@@ -26,14 +25,14 @@ just tools install --all  # 安装 config.yaml 中 tools 配置的全部工具
 just tools install weiyun # 仅安装指定工具
 ```
 
-### 使用 Python 脚本
+### 使用 uv
 
 ```bash
-python3 agents.py setup            # 完整初始化
-python3 agents.py setup-agents     # 仅安装配置
-python3 agents.py install          # 安装 tools 配置的全部工具
-python3 agents.py install weiyun   # 仅安装指定工具
-python3 agents.py tools-list       # 列出全部 tools
+uv run agents.py setup            # 完整初始化
+uv run agents.py setup-agents     # 仅安装配置
+uv run agents.py install          # 安装 tools 配置的全部工具
+uv run agents.py install weiyun   # 仅安装指定工具
+uv run agents.py tools-list       # 列出全部 tools
 ```
 
 ## 支持的 AI 工具

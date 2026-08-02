@@ -2,8 +2,6 @@
 # 使用方法: just <command> [args]
 # 示例: just tools install / just setup
 
-set shell := ["python3", "-c"]
-
 # ==================== 工具安装 (tools) ====================
 
 # just tools install --all / -a   安装 config.yaml 中全部 tools
@@ -17,10 +15,10 @@ tools *ARGS:
     sub="${1:-}"; shift || true
     case "$sub" in
         install)
-            python3 agents.py install "$@"
+            uv run agents.py install "$@"
             ;;
         list)
-            python3 agents.py tools-list "$@"
+            uv run agents.py tools-list "$@"
             ;;
         *)
             echo "用法: just tools <install|list> [--all|-a|<TOOLS_ID>]"
@@ -34,7 +32,7 @@ tools *ARGS:
 [group('setup')]
 setup-agents:
     #!/bin/bash
-    python3 agents.py setup-agents
+    uv run agents.py setup-agents
 
 # 完整初始化（链接 + 安装 agents）
 # 支持: just setup / just setup agents
@@ -43,10 +41,10 @@ setup TARGET='':
     #!/bin/bash
     case "{{TARGET}}" in
         agents)
-            python3 agents.py setup-agents
+            uv run agents.py setup-agents
             ;;
         "")
-            python3 agents.py setup
+            uv run agents.py setup
             ;;
         *)
             echo "不支持的 target: {{TARGET}}"

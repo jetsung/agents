@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["PyYAML"]
+# ///
 """AI Agents 配置安装工具 - 跨平台统一脚本
 
 功能：

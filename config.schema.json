@@ -16,7 +16,7 @@
     },
     "platforms": {
       "type": "object",
-      "description": "工具平台配置：path 为工具配置目录，agents 为配置文件名",
+      "description": "工具平台配置：path 为工具配置目录（~ 展开，./ 前缀表示相对项目目录），agents 为配置文件名",
       "additionalProperties": {
         "type": "object",
         "required": ["path"],
@@ -24,7 +24,7 @@
         "properties": {
           "path": {
             "type": "string",
-            "description": "工具配置目录"
+            "description": "工具配置目录，支持 ~ 展开；./ 前缀表示相对于项目目录（如 ./.pi）"
           },
           "agents": {
             "type": ["string", "null"],
@@ -33,6 +33,11 @@
           "source": {
             "type": "string",
             "description": "agents 源文件名，默认为 AGENTS.md"
+          },
+          "ensure_dir": {
+            "type": "boolean",
+            "default": false,
+            "description": "目标目录不存在时自动创建，默认 false（跳过并提示）"
           }
         }
       }

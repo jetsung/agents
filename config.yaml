@@ -3,65 +3,22 @@ env:
   HELLO: WORLD
 
 # 工具平台配置
-# path: 工具配置目录
+# path: 工具配置目录（支持 ~ 展开；./ 前缀表示相对项目目录，如 ./.pi）
 # agents: agents 配置文件名（相对于 path），为空则不安装
 # source: agents 源文件名，默认为 AGENTS.md
-platforms:
-  claude:
-    path: ~/.claude
-    agents: CLAUDE.md
-
-  openclaude:
-    path: ~/.openclaude
-    agents: CLAUDE.md
-
-  opencode:
-    path: ~/.opencode
-    agents: AGENTS.md
-
-  codex:
-    path: ~/.codex
-    agents: AGENTS.md
-
-  qwen:
-    path: ~/.qwen
-    agents: AGENTS.md
-
-  codebuddy:
-    path: ~/.codebuddy
-    agents: CODEBUDDY.md
-
-  cline:
-    path: ~/.cline
-    agents: CLAUDE.md
-
-  # kilo:
-  #   path: ~/.kilocode
+# ensure_dir: 目标目录不存在时自动创建（可选，默认 false 跳过）
+#
+# 注意：全部已确认渠道均已内置至 agents.py（BUILTIN_PLATFORMS），
+# 此处配置用于覆盖同名内置渠道；未在此配置的渠道来自内置表或
+# ~/.xskill/settings.json 补充。删除某渠道不会停用内置同名渠道，
+# 如需停用请同步修改 agents.py 的 BUILTIN_PLATFORMS。
+# platforms:
+  # pi 渠道已内置至 agents.py（BUILTIN_PLATFORMS），此处配置用于覆盖内置同名渠道。
+  # 如需调整，可在下方以同名 key 覆盖，例如：
+  # pi:
+  #   path: ~/.pi/agent
   #   agents: AGENTS.md
-
-  roo:
-    path: ~/.roo
-    agents: AGENTS.md
-
-  factory:
-    path: ~/.factory
-    agents: AGENTS.md
-
-  qoder:
-    path: ~/.qoder
-    agents: AGENTS.md
-
-  langcli:
-    path: ~/.langcli
-    agents:
-
-  gemini:
-    path: ~/.gemini
-    agents: GEMINI.md
-
-  atomcode:
-    path: ~/.atomcode
-    agents: ATOMCODE.md
+  #   ensure_dir: true
 
 # 工具安装配置
 # 每个 tool 条目支持以下字段:

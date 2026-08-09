@@ -50,6 +50,7 @@ uv run agents.py tools-list       # 列出全部 tools
 | Factory | `~/.factory/AGENTS.md` |
 | Qoder | `~/.qoder/AGENTS.md` |
 | LangCLI | - |
+| Pi（全局） | `~/.pi/agent/AGENTS.md` |
 | Gemini | `~/.gemini/GEMINI.md` |
 | AtomCode | `~/.atomcode/ATOMCODE.md` |
 
@@ -106,9 +107,10 @@ env:
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `path` | string | 是 | 工具配置根目录（支持 `~` 展开），如 `~/.claude` |
+| `path` | string | 是 | 工具配置根目录；支持 `~` 展开，`./` 前缀表示相对项目目录（如 `./.pi`） |
 | `agents` | string | 否 | 该工具下 agents 配置文件名；为空则不安装 agents |
 | `source` | string | 否 | agents 源文件名，默认为 `AGENTS.md` |
+| `ensure_dir` | bool | 否 | 目标目录不存在时自动创建（默认 `false`，跳过并提示） |
 
 ```yaml
 platforms:
@@ -119,6 +121,8 @@ platforms:
     path: ~/.codebuddy
     agents: CODEBUDDY.md
 ```
+
+> **内置渠道**：pi 渠道（全局 `~/.pi/agent/AGENTS.md`）已写死在 `agents.py` 的 `BUILTIN_PLATFORMS`，无需在 `config.yaml` 配置。如需调整行为，可在 `platforms` 中以同名 `pi` 覆盖，或新增其它自定义渠道。
 
 ### tools（工具安装）
 

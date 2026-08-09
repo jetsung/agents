@@ -26,6 +26,18 @@ tools *ARGS:
             ;;
     esac
 
+# ==================== 平台渠道 (platforms) ====================
+
+# 列出平台渠道（内置 + config.yaml + xskill 补充）
+# just platforms           查看全部渠道
+# just platforms <CHANNEL> 仅查看指定渠道
+# 说明：platforms 仅一个列渠道操作，无需 list 子命令
+#      （uv run agents.py platforms-list 无参数列全部，带名字列单个）
+[group('platforms')]
+platforms *ARGS:
+    #!/bin/bash
+    uv run agents.py platforms-list {{ARGS}}
+
 # ==================== 初始化 (setup) ====================
 
 # 安装 agents 配置文件到各 AI 工具

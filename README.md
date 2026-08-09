@@ -33,11 +33,12 @@ uv run agents.py setup-agents     # 仅安装配置
 uv run agents.py install          # 安装 tools 配置的全部工具
 uv run agents.py install weiyun   # 仅安装指定工具
 uv run agents.py tools-list       # 列出全部 tools
+uv run agents.py platforms-list    # 列出全部平台渠道
 ```
 
-## 支持的 AI 工具
+## 支持的 AI 工具渠道
 
-| 工具 | 配置文件 |
+| 渠道 | 配置文件 |
 |------|----------|
 | Claude | `~/.claude/CLAUDE.md` |
 | OpenClaude | `~/.openclaude/CLAUDE.md` |
@@ -50,15 +51,34 @@ uv run agents.py tools-list       # 列出全部 tools
 | Factory | `~/.factory/AGENTS.md` |
 | Qoder | `~/.qoder/AGENTS.md` |
 | LangCLI | - |
-| Pi（全局） | `~/.pi/agent/AGENTS.md` |
 | Gemini | `~/.gemini/GEMINI.md` |
 | AtomCode | `~/.atomcode/ATOMCODE.md` |
+| OpenInterpreter | `~/.openinterpreter/AGENTS.md` |
+| ZCode | `~/.zcode/AGENTS.md` |
+| JCode | `~/.jcode/AGENTS.md` |
+| Kilo | `~/.kilocode/AGENTS.md` |
+| Pi（全局） | `~/.pi/agent/AGENTS.md` |
 
-脚本会按 `config.yaml` 中 `platforms` 的配置为各 AI 工具创建软链接（源文件不存在时跳过）。如果目标已存在，脚本会自动备份。
+渠道清单按以下三层合并，优先级由高到低（`just platforms` 可查看各渠道来源）：
+
+1. `config.yaml` 中 `platforms` 的显式配置（可覆盖内置同名渠道）
+2. `agents.py` 内置的 `BUILTIN_PLATFORMS`（默认基准，已写死全部已确认渠道）
+3. `~/.xskill/settings.json` 中 `platforms` 补充的新渠道
+
+脚本合并后为各 AI 工具创建软链接（源文件不存在时跳过）。如果目标已存在，脚本会自动备份。
 
 ## 如何使用
 
 所有命令通过 `justfile` 暴露，运行 `just --list` 可查看全部配方。以下按分组列出（`<...>` 为占位参数，`[...]` 为可选）：
+
+### 平台渠道（platforms 组）
+
+| 命令 | 说明 |
+|------|------|
+| `just platforms` | 列出全部渠道（内置 + config.yaml + xskill 补充），含目标路径、来源与目录存在状态 |
+| `just platforms <CHANNEL>` | 仅查看指定渠道 |
+
+对应 `uv run agents.py platforms-list [<CHANNEL>]`。
 
 ### 初始化（setup 组）
 
@@ -85,6 +105,7 @@ uv run agents.py tools-list       # 列出全部 tools
 ├── agents.py           # 跨平台安装脚本
 ├── justfile            # just 命令入口
 ├── AGENTS.md           # AI 代理行为配置
+├── skills/             # type: skill 工具解压落地目录
 └── LICENSE             # Apache License 2.0
 ```
 
@@ -122,7 +143,9 @@ platforms:
     agents: CODEBUDDY.md
 ```
 
-> **内置渠道**：pi 渠道（全局 `~/.pi/agent/AGENTS.md`）已写死在 `agents.py` 的 `BUILTIN_PLATFORMS`，无需在 `config.yaml` 配置。如需调整行为，可在 `platforms` 中以同名 `pi` 覆盖，或新增其它自定义渠道。
+> **内置渠道**：`agents.py` 的 `BUILTIN_PLATFORMS` 已写死全部已确认渠道（含 pi 的 `~/.pi/agent/AGENTS.md`），无需在 `config.yaml` 重复配置即可安装。
+>
+> 合并优先级：`config.yaml` 显式配置 > 内置渠道 > `~/.xskill/settings.json` 补充；通过 `just platforms` 可查看每个渠道的来源标记（`内置` / `config.yaml` / `xskill`）与目录存在状态。如需调整渠道，可在 `platforms` 中以同名渠道覆盖，或在 `~/.xskill/settings.json` 中补充新渠道。
 
 ### tools（工具安装）
 

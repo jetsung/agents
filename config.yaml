@@ -51,6 +51,7 @@ env:
 tools:
   # skills：下载 MCP 工具包，type=skill 时 extract 默认解压到 skills/ 文件夹
   # weiyun zip 内含 weiyun/ 顶层目录，解压到 skills/ 即得到 skills/weiyun/
+  # https://www.weiyun.com/act/skill
   - id: weiyun
     name: 微云网盘 MCP 技能
     type: skill
@@ -63,6 +64,20 @@ tools:
       # 兜底：确保最终位于 skills/weiyun（应对 zip 不含顶层目录的情况）
       - name: 确保落地到 skills/weiyun
         run: test -d skills/weiyun || mv skills/* skills/weiyun 2>/dev/null || true
+
+  # https://semi.design/zh-CN/start/mcp-skills#%E5%AE%89%E8%A3%85%20Skills
+  - id: semi-design-guide
+    name: Semi Design 使用指南
+    type: skill
+    env:
+      URL: https://semi.design/skills.zip
+    steps:
+      - name: 下载 Semi Design 使用指南
+        download: $URL
+        dest: skills.zip
+      # 兜底：确保最终位于 skills/weiyun（应对 zip 不含顶层目录的情况）
+      - name: 确保落地到 skills/semi-ui-skills
+        run: test -d skills/semi-ui-skills || mv skills/* skills/semi-ui-skills 2>/dev/null || true
 
   # https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
   - id: ui-ux-pro-max-skill
@@ -79,6 +94,7 @@ tools:
   # https://github.com/github/spec-kit.git
   - id: spec-kit
     name: GitHub Spec Kit
+    type: tool
     steps:
       - name: 安装 GitHub Spec Kit
         run: |
@@ -89,13 +105,25 @@ tools:
 
   - id: qoder
     name: Qoder CLI
+    type: tool
     steps:
       - name: 安装 Qoder CLI
         run: |
-          curl -L https://qoder.com/install | bash
+          curl -fsSL https://qoder.com/install | bash
       - name: 验证 Qoder CLI 安装状态
         run: |
           qodercli --version
+
+  - id: qoder-cn
+    name: Qoder CLI（国内版）
+    type: tool
+    steps:
+      - name: 安装 Qoder CLI（国内版）
+        run: |
+          curl -fsSL https://qoder.com.cn/install | bash
+      - name: 验证 Qoder CLI 安装状态
+        run: |
+          qoderclicn --version
 
   # skills 示例：run 步骤与 download 步骤组合（run 作为 steps 内步骤类型）
   # - id: example-skill

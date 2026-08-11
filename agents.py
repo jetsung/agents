@@ -175,7 +175,6 @@ BUILTIN_PLATFORMS = {
     "qwen": {"path": "~/.qwen", "agents": "AGENTS.md"},
     "codebuddy": {"path": "~/.codebuddy", "agents": "CODEBUDDY.md"},
     "cline": {"path": "~/.cline", "agents": "CLAUDE.md"},
-    "roo": {"path": "~/.roo", "agents": "AGENTS.md"},
     "factory": {"path": "~/.factory", "agents": "AGENTS.md"},
     "qoder": {"path": "~/.qoder", "agents": "AGENTS.md"},
     "langcli": {"path": "~/.langcli", "agents": ""},

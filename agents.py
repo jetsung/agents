@@ -191,6 +191,17 @@ BUILTIN_PLATFORMS = {
         "agents": "AGENTS.md",
         "ensure_dir": True,
     },
+    # —— 内置补充：zoo（Roo Code 继承者）——
+    "zoo": {
+        "path": "~/.zoo",
+        "agents": "AGENTS.md",
+    },
+    # —— 内置补充：omp（Oh My Pi，fork of pi）——
+    "omp": {
+        "path": "~/.omp/agent",
+        "agents": "AGENTS.md",
+        "ensure_dir": True,
+    },
 }
 
 

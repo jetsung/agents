@@ -47,7 +47,7 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 | Qwen | `~/.qwen/AGENTS.md` |
 | CodeBuddy | `~/.codebuddy/CODEBUDDY.md` |
 | Cline | `~/.cline/CLAUDE.md` |
-| Roo | `~/.roo/AGENTS.md` |
+| Zoo | `~/.zoo/AGENTS.md` |
 | Factory | `~/.factory/AGENTS.md` |
 | Qoder | `~/.qoder/AGENTS.md` |
 | LangCLI | - |
@@ -57,7 +57,8 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 | ZCode | `~/.zcode/AGENTS.md` |
 | JCode | `~/.jcode/AGENTS.md` |
 | Kilo | `~/.kilocode/AGENTS.md` |
-| Pi（全局） | `~/.pi/agent/AGENTS.md` |
+| Pi | `~/.pi/agent/AGENTS.md` |
+| Omp（Oh My Pi） | `~/.omp/agent/AGENTS.md` |
 
 渠道清单按以下三层合并，优先级由高到低（`just platforms` 可查看各渠道来源）：
 

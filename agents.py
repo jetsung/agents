@@ -191,9 +191,9 @@ BUILTIN_PLATFORMS = {
         "agents": "AGENTS.md",
         "ensure_dir": True,
     },
-    # —— 内置补充：zoo（Roo Code 继承者）——
+    # —— 内置补充：zoo（Zoo Code，Roo Code 继承者，沿用 ~/.roo 配置目录）——
     "zoo": {
-        "path": "~/.zoo",
+        "path": "~/.roo",
         "agents": "AGENTS.md",
     },
     # —— 内置补充：omp（Oh My Pi，fork of pi）——

@@ -47,7 +47,7 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 | Qwen | `~/.qwen/AGENTS.md` |
 | CodeBuddy | `~/.codebuddy/CODEBUDDY.md` |
 | Cline | `~/.cline/CLAUDE.md` |
-| Zoo | `~/.zoo/AGENTS.md` |
+| Zoo | `~/.roo/AGENTS.md` |
 | Factory | `~/.factory/AGENTS.md` |
 | Qoder | `~/.qoder/AGENTS.md` |
 | LangCLI | - |

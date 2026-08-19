@@ -163,7 +163,6 @@ def load_config(project_dir: Path) -> dict:
 # 说明：
 # - 同名渠道同时存在于 config.yaml 与 xskill 时，以 config.yaml 值为准。
 # - path 统一为 ~/.xxx 形式；agents 为相对 path 的 agents 配置文件名。
-# - langcli 的 agents 为空（与 config.yaml 一致），setup-agents 时跳过。
 # - pi（https://github.com/earendil-works/pi-coding-agent）
 #   上下文文件（全局）：~/.pi/agent/AGENTS.md
 BUILTIN_PLATFORMS = {
@@ -172,13 +171,14 @@ BUILTIN_PLATFORMS = {
     "openclaude": {"path": "~/.openclaude", "agents": "CLAUDE.md"},
     "opencode": {"path": "~/.opencode", "agents": "AGENTS.md"},
     "codex": {"path": "~/.codex", "agents": "AGENTS.md"},
+    "commandcode": {"path": "~/.commandcode", "agents": "AGENTS.md"},
     "qwen": {"path": "~/.qwen", "agents": "AGENTS.md"},
     "codebuddy": {"path": "~/.codebuddy", "agents": "CODEBUDDY.md"},
     "cline": {"path": "~/.cline", "agents": "CLAUDE.md"},
     "factory": {"path": "~/.factory", "agents": "AGENTS.md"},
     "qoder": {"path": "~/.qoder", "agents": "AGENTS.md"},
-    "langcli": {"path": "~/.langcli", "agents": ""},
-    "gemini": {"path": "~/.gemini", "agents": "GEMINI.md"},
+    "langcli": {"path": "~/.langcli", "agents": "LANGCLI.md"},
+    "antigravity": {"path": "~/.gemini", "agents": "GEMINI.md"},
     "atomcode": {"path": "~/.atomcode", "agents": "ATOMCODE.md"},
     # —— ~/.xskill/settings.json platforms 中仅存在于该处的渠道 ——
     "openinterpreter": {"path": "~/.openinterpreter", "agents": "AGENTS.md"},

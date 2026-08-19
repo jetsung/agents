@@ -125,6 +125,17 @@ tools:
         run: |
           qoderclicn --version
 
+  - id: atomcode
+    name: AtomCode CLI
+    type: tool
+    steps:
+      - name: 安装 AtomCode CLI
+        run: |
+          curl -fsSL https://raw.atomgit.com/atomgit_atomcode/atomcode/raw/main/scripts/install.sh | sh
+      - name: 验证 AtomCode CLI 安装状态
+        run: |
+          atomcode --version
+
   # skills 示例：run 步骤与 download 步骤组合（run 作为 steps 内步骤类型）
   # - id: example-skill
   #   name: 示例 Skill

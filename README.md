@@ -44,14 +44,15 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 | OpenClaude | `~/.openclaude/CLAUDE.md` |
 | OpenCode | `~/.opencode/AGENTS.md` |
 | Codex | `~/.codex/AGENTS.md` |
+| Command Code | `~/.commandcode/AGENTS.md` |
 | Qwen | `~/.qwen/AGENTS.md` |
 | CodeBuddy | `~/.codebuddy/CODEBUDDY.md` |
 | Cline | `~/.cline/CLAUDE.md` |
 | Zoo | `~/.roo/AGENTS.md` |
 | Factory | `~/.factory/AGENTS.md` |
 | Qoder | `~/.qoder/AGENTS.md` |
-| LangCLI | - |
-| Gemini | `~/.gemini/GEMINI.md` |
+| LangCLI | `~/.langcli/LANGCLI.md` |
+| Antigravity | `~/.gemini/GEMINI.md` |
 | AtomCode | `~/.atomcode/ATOMCODE.md` |
 | OpenInterpreter | `~/.openinterpreter/AGENTS.md` |
 | ZCode | `~/.zcode/AGENTS.md` |

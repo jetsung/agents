@@ -185,6 +185,7 @@ BUILTIN_PLATFORMS = {
     "zcode": {"path": "~/.zcode", "agents": "AGENTS.md"},
     "jcode": {"path": "~/.jcode", "agents": "AGENTS.md"},
     "kilo": {"path": "~/.kilocode", "agents": "AGENTS.md"},
+    "kiro": {"path": "~/.kiro", "agents": "AGENTS.md"},
     # —— 内置补充：pi ——
     "pi": {
         "path": "~/.pi/agent",

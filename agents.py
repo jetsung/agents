@@ -55,6 +55,33 @@ def backup_path(path: Path) -> Path:
     return path.parent / f"{path.name}_backup_{timestamp}"
 
 
+def display_width(s: str) -> int:
+    """计算字符串在终端中的显示宽度（CJK 全角字符计 2，ASCII 计 1）"""
+    width = 0
+    for ch in s:
+        cp = ord(ch)
+        # CJK 统一表意文字、全角标点、CJK 符号等
+        if (0x2E80 <= cp <= 0x9FFF or
+            0xA000 <= cp <= 0xA4CF or
+            0xF900 <= cp <= 0xFAFF or
+            0xFE30 <= cp <= 0xFE6F or
+            0xFF00 <= cp <= 0xFFEF or
+            0x20000 <= cp <= 0x2FFFF or
+            0x30000 <= cp <= 0x3FFFF):
+            width += 2
+        else:
+            width += 1
+    return width
+
+
+def pad_display(s: str, width: int) -> str:
+    """将字符串填充到指定显示宽度（右对齐），不足补空格"""
+    current = display_width(s)
+    if current >= width:
+        return s
+    return s + " " * (width - current)
+
+
 def resolve_env_vars(text: str, env_vars: dict) -> str:
     """解析字符串中的环境变量 $VAR"""
     import re
@@ -167,41 +194,50 @@ def load_config(project_dir: Path) -> dict:
 #   上下文文件（全局）：~/.pi/agent/AGENTS.md
 BUILTIN_PLATFORMS = {
     # —— 仓库 config.yaml platforms 段（kilo 在 config.yaml 中处于注释状态，不启用）——
-    "claude": {"path": "~/.claude", "agents": "CLAUDE.md"},
-    "openclaude": {"path": "~/.openclaude", "agents": "CLAUDE.md"},
-    "opencode": {"path": "~/.opencode", "agents": "AGENTS.md"},
-    "codex": {"path": "~/.codex", "agents": "AGENTS.md"},
-    "commandcode": {"path": "~/.commandcode", "agents": "AGENTS.md"},
-    "qwen": {"path": "~/.qwen", "agents": "AGENTS.md"},
-    "codebuddy": {"path": "~/.codebuddy", "agents": "CODEBUDDY.md"},
-    "cline": {"path": "~/.cline", "agents": "CLAUDE.md"},
-    "factory": {"path": "~/.factory", "agents": "AGENTS.md"},
-    "qoder": {"path": "~/.qoder", "agents": "AGENTS.md"},
-    "langcli": {"path": "~/.langcli", "agents": "LANGCLI.md"},
-    "antigravity": {"path": "~/.gemini", "agents": "GEMINI.md"},
-    "atomcode": {"path": "~/.atomcode", "agents": "ATOMCODE.md"},
+    "antigravity": {"name": "Antigravity", "path": "~/.gemini", "agents": "GEMINI.md"},
+    "atomcode": {"name": "AtomCode", "path": "~/.atomcode", "agents": "ATOMCODE.md"},
+    "claude": {"name": "Claude", "path": "~/.claude", "agents": "CLAUDE.md"},
+    "cline": {"name": "Cline", "path": "~/.cline", "agents": "CLAUDE.md"},
+    "codebuddy": {"name": "CodeBuddy", "path": "~/.codebuddy", "agents": "CODEBUDDY.md"},
+    "codex": {"name": "Codex", "path": "~/.codex", "agents": "AGENTS.md"},
+    "commandcode": {"name": "Command Code", "path": "~/.commandcode", "agents": "AGENTS.md"},
+    "factory": {"name": "Factory", "path": "~/.factory", "agents": "AGENTS.md"},
+    "langcli": {"name": "LangCLI", "path": "~/.langcli", "agents": "LANGCLI.md"},
+    "openclaude": {"name": "OpenClaude", "path": "~/.openclaude", "agents": "CLAUDE.md"},
+    "opencode": {"name": "OpenCode", "path": "~/.opencode", "agents": "AGENTS.md"},
+    "qoder": {"name": "Qoder", "path": "~/.qoder", "agents": "AGENTS.md"},
+    "qwen": {"name": "Qwen", "path": "~/.qwen", "agents": "AGENTS.md"},
     # —— ~/.xskill/settings.json platforms 中仅存在于该处的渠道 ——
-    "openinterpreter": {"path": "~/.openinterpreter", "agents": "AGENTS.md"},
-    "zcode": {"path": "~/.zcode", "agents": "AGENTS.md"},
-    "jcode": {"path": "~/.jcode", "agents": "AGENTS.md"},
-    "kilo": {"path": "~/.kilocode", "agents": "AGENTS.md"},
-    "kiro": {"path": "~/.kiro", "agents": "AGENTS.md"},
+    "jcode": {"name": "JCode", "path": "~/.jcode", "agents": "AGENTS.md"},
+    "kilo": {"name": "Kilo", "path": "~/.kilocode", "agents": "AGENTS.md"},
+    "kiro": {"name": "Kiro", "path": "~/.kiro", "agents": "AGENTS.md"},
+    "openinterpreter": {"name": "OpenInterpreter", "path": "~/.openinterpreter", "agents": "AGENTS.md"},
+    "zcode": {"name": "ZCode", "path": "~/.zcode", "agents": "AGENTS.md"},
+    # —— 内置补充：dsh（DeepSeek Harness）——
+    "dsh": {
+        "name": "DeepSeek Harness",
+        "path": "~/.dsh",
+        "agents": "AGENTS.md",
+    },
+    # —— 内置补充：omp（Oh My Pi，fork of pi）——
+    "omp": {
+        "name": "Omp（Oh My Pi）",
+        "path": "~/.omp/agent",
+        "agents": "AGENTS.md",
+        "ensure_dir": True,
+    },
     # —— 内置补充：pi ——
     "pi": {
+        "name": "Pi",
         "path": "~/.pi/agent",
         "agents": "AGENTS.md",
         "ensure_dir": True,
     },
     # —— 内置补充：zoo（Zoo Code，Roo Code 继承者，沿用 ~/.roo 配置目录）——
     "zoo": {
+        "name": "Zoo Code",
         "path": "~/.roo",
         "agents": "AGENTS.md",
-    },
-    # —— 内置补充：omp（Oh My Pi，fork of pi）——
-    "omp": {
-        "path": "~/.omp/agent",
-        "agents": "AGENTS.md",
-        "ensure_dir": True,
     },
 }
 
@@ -577,17 +613,25 @@ def cmd_platforms_list(project_dir: Path, name: str = None) -> None:
 
     use_color = sys.stdout.isatty() and sys.platform != "win32"
 
-    print(f'{"渠道":<16} {"目标路径":<46} {"agents":<12} {"来源":<12} {"存在"}')
-    print("-" * 100)
+    print(f'{"渠道":<16} {"名称":<20} {"目标路径":<46} {"agents":<12} {"来源":<12} {"存在"}')
+    print("-" * 120)
     for pname, platform in platforms.items():
+        name = platform.get("name") or pname
         agents = platform.get("agents") or "-"
         path = str(expand_platform_path(platform.get("path", ""), project_dir))
         src = platform.get("_source", "config.yaml")
         exists = "存在" if Path(path).exists() else "缺失"
-        line = f"{pname:<16} {path:<46} {agents:<12} {src:<12} {exists}"
-        if exists == "存在" and use_color:
-            # 目录存在：整行标黄
-            line = f"\033[33m{line}\033[0m"
+        line = (
+            f"{pad_display(pname, 16)} "
+            f"{pad_display(name, 20)} "
+            f"{pad_display(path, 46)} "
+            f"{pad_display(agents, 12)} "
+            f"{pad_display(src, 12)} "
+            f"{exists}"
+        )
+        if exists == "缺失" and use_color:
+            # 目录缺失：整行标红
+            line = f"\033[31m{line}\033[0m"
         print(line)
 
 

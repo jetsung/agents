@@ -60,6 +60,7 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 | Kilo | `~/.kilocode/AGENTS.md` |
 | Pi | `~/.pi/agent/AGENTS.md` |
 | Omp（Oh My Pi） | `~/.omp/agent/AGENTS.md` |
+| Grok Build CLI | `~/.grok/AGENTS.md` |
 
 渠道清单按以下三层合并，优先级由高到低（`just platforms` 可查看各渠道来源）：
 

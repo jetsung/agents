@@ -239,6 +239,12 @@ BUILTIN_PLATFORMS = {
         "path": "~/.roo",
         "agents": "AGENTS.md",
     },
+    # —— 内置补充：grok（Grok Build CLI）——
+    "grok": {
+        "name": "Grok Build CLI",
+        "path": "~/.grok",
+        "agents": "AGENTS.md",
+    },
 }
 
 

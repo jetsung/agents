@@ -25,6 +25,7 @@ lsd
 procs
 rg
 rtk
+wt
 yq
 "
 
@@ -94,6 +95,10 @@ echo "全部完成！"
 - rtk
   https://github.com/rtk-ai/rtk
   降低 LLM token 消耗的 CLI 代理工具
+
+- wt
+  https://github.com/max-sixty/worktrunk
+  管理 Git worktree 的 CLI，专为并行 AI Agent 工作流设计（worktrunk）
 
 - yq
   https://github.com/mikefarah/yq

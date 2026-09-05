@@ -1,9 +1,23 @@
-# Agent Constraints
+# 智能体约束
 
-- Reply in Chinese (all responses and outputs must be in simplified Chinese)
-- Don't add AI co-author tags to commits
-- Write git commit messages in Chinese
-- Your every reasoning process MUST fully echo and display in simplified Chinese (including all analysis steps, decision reasons, and detailed explanations). You must always think and output in simplified Chinese only. No English at all.
+- 中文回复（所有回复与输出均须使用简体中文）
+- 提交时不要添加 AI 共同作者标签
+- 用中文编写 git 提交信息
+- 你的每个推理过程必须完整地以简体中文呈现（包括所有分析步骤、决策原因和详细解释）。你只能始终用简体中文思考和输出，不得使用任何英文。
+
+# 网络规则（中国网络代理）
+
+当环境变量 `IS_CHINA` 的值为 `1`（中国网络环境）时，在搜索或下载文件时，若链接命中下方「代理域名清单」中的域名，必须在其前面添加前缀 `https://filetas.asfd.cn`。
+
+## 代理域名清单
+
+| 域名 | 改写示例 |
+| --- | --- |
+| raw.githubusercontent.com | `https://filetas.asfd.cn/https://raw.githubusercontent.com/xxx` |
+
+后续发现其他需要走代理的域名，直接在上表末尾追加一行即可（仅填域名与示例）。
+
+若访问未在清单中的域名或链接失败（如超时、连接被重置），可先按上述方式将该域名加入清单并加前缀 `https://filetas.asfd.cn` 后，重新抓取尝试。
 
 # 命令行工具清单
 以下命令行工具已在当前环境收录（含安装脚本与短链），清单见：

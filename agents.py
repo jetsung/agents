@@ -11,11 +11,16 @@
 - setup: 执行以上所有步骤
 """
 
+import sys
+
+# 禁止生成 __pycache__（.pyc 字节码缓存）
+# 必须在其他 import 之前设置，否则已 import 的模块仍会写缓存
+sys.dont_write_bytecode = True
+
 import json
 import yaml
 import subprocess
 import os
-import sys
 import argparse
 import shutil
 import urllib.request

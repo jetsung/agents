@@ -187,69 +187,54 @@ def load_config(project_dir: Path) -> dict:
 
 # ==================== 内置渠道配置 ====================
 
-# 已确认的渠道（config.yaml 与 ~/.xskill/settings.json 中的全部渠道）写死于此，
-# 无需在 config.yaml 重复配置即可安装；config.yaml 仍可覆盖同名渠道，
-# ~/.xskill/settings.json 仍可补充新渠道。
+# 渠道清单与 ../xskill/docs/PLATFORMS.md 保持一致（单一出处）：
+# 全部 25 个渠道写死于此，无需在 config.yaml 重复配置即可安装；
+# config.yaml 仍可覆盖同名渠道，~/.xskill/settings.json 仍可补充新渠道。
 # 合并优先级：config.yaml 显式配置 > 内置渠道 > ~/.xskill/settings.json 补充。
 #
 # 说明：
-# - 同名渠道同时存在于 config.yaml 与 xskill 时，以 config.yaml 值为准。
 # - path 统一为 ~/.xxx 形式；agents 为相对 path 的 agents 配置文件名。
 # - pi（https://github.com/earendil-works/pi-coding-agent）
 #   上下文文件（全局）：~/.pi/agent/AGENTS.md
 BUILTIN_PLATFORMS = {
-    # —— 仓库 config.yaml platforms 段（kilo 在 config.yaml 中处于注释状态，不启用）——
+    # —— 常用渠道（默认启用，同 PLATFORMS.md）——
     "antigravity": {"name": "Antigravity", "path": "~/.gemini", "agents": "GEMINI.md"},
-    "atomcode": {"name": "AtomCode", "path": "~/.atomcode", "agents": "ATOMCODE.md"},
-    "claude": {"name": "Claude", "path": "~/.claude", "agents": "CLAUDE.md"},
-    "cline": {"name": "Cline", "path": "~/.cline", "agents": "CLAUDE.md"},
+    "claude": {"name": "Claude Code", "path": "~/.claude", "agents": "CLAUDE.md"},
     "codebuddy": {"name": "CodeBuddy", "path": "~/.codebuddy", "agents": "CODEBUDDY.md"},
     "codex": {"name": "Codex", "path": "~/.codex", "agents": "AGENTS.md"},
-    "commandcode": {"name": "Command Code", "path": "~/.commandcode", "agents": "AGENTS.md"},
-    "factory": {"name": "Factory", "path": "~/.factory", "agents": "AGENTS.md"},
-    "langcli": {"name": "LangCLI", "path": "~/.langcli", "agents": "LANGCLI.md"},
-    "openclaude": {"name": "OpenClaude", "path": "~/.openclaude", "agents": "CLAUDE.md"},
-    "opencode": {"name": "OpenCode", "path": "~/.opencode", "agents": "AGENTS.md"},
-    "qoder": {"name": "Qoder", "path": "~/.qoder", "agents": "AGENTS.md"},
-    "qwen": {"name": "Qwen", "path": "~/.qwen", "agents": "AGENTS.md"},
-    # —— ~/.xskill/settings.json platforms 中仅存在于该处的渠道 ——
-    "jcode": {"name": "JCode", "path": "~/.jcode", "agents": "AGENTS.md"},
-    "kilo": {"name": "Kilo", "path": "~/.kilocode", "agents": "AGENTS.md"},
-    "kiro": {"name": "Kiro", "path": "~/.kiro", "agents": "AGENTS.md"},
-    "openinterpreter": {"name": "OpenInterpreter", "path": "~/.openinterpreter", "agents": "AGENTS.md"},
-    "zcode": {"name": "ZCode", "path": "~/.zcode", "agents": "AGENTS.md"},
-    # —— 内置补充：dsh（DeepSeek Harness）——
-    "dsh": {
-        "name": "DeepSeek Harness",
-        "path": "~/.dsh",
-        "agents": "AGENTS.md",
-    },
-    # —— 内置补充：omp（Oh My Pi，fork of pi）——
+    "dsh": {"name": "DeepSeek Harness", "path": "~/.dsh", "agents": "AGENTS.md"},
     "omp": {
-        "name": "Omp（Oh My Pi）",
+        "name": "Oh My Pi",
         "path": "~/.omp/agent",
         "agents": "AGENTS.md",
         "ensure_dir": True,
     },
-    # —— 内置补充：pi ——
+    "opencode": {"name": "OpenCode", "path": "~/.opencode", "agents": "AGENTS.md"},
     "pi": {
         "name": "Pi",
         "path": "~/.pi/agent",
         "agents": "AGENTS.md",
         "ensure_dir": True,
     },
-    # —— 内置补充：zoo（Zoo Code，Roo Code 继承者，沿用 ~/.roo 配置目录）——
-    "zoo": {
-        "name": "Zoo Code",
-        "path": "~/.roo",
-        "agents": "AGENTS.md",
-    },
-    # —— 内置补充：grok（Grok Build CLI）——
-    "grok": {
-        "name": "Grok Build CLI",
-        "path": "~/.grok",
-        "agents": "AGENTS.md",
-    },
+    "qoder": {"name": "Qoder", "path": "~/.qoder", "agents": "AGENTS.md"},
+    "qoder-cn": {"name": "Qoder CN", "path": "~/.qoder-cn", "agents": "AGENTS.md"},
+    "workbuddy": {"name": "WorkBuddy", "path": "~/.workbuddy", "agents": "CODEBUDDY.md"},
+    "zcode": {"name": "ZCode", "path": "~/.zcode", "agents": "AGENTS.md"},
+    # —— 非常用渠道（默认禁用，同 PLATFORMS.md）——
+    "commandcode": {"name": "Command Code", "path": "~/.commandcode", "agents": "AGENTS.md"},
+    "atomcode": {"name": "AtomCode", "path": "~/.atomcode", "agents": "ATOMCODE.md"},
+    "cline": {"name": "Cline", "path": "~/.cline", "agents": "CLAUDE.md"},
+    "factory": {"name": "Factory", "path": "~/.factory", "agents": "AGENTS.md"},
+    "jcode": {"name": "JCode", "path": "~/.jcode", "agents": "AGENTS.md"},
+    "kilo": {"name": "Kilo Code", "path": "~/.kilocode", "agents": "AGENTS.md"},
+    "kiro": {"name": "Kiro", "path": "~/.kiro", "agents": "AGENTS.md"},
+    "langcli": {"name": "LangCLI", "path": "~/.langcli", "agents": "LANGCLI.md"},
+    "openclaude": {"name": "OpenClaude", "path": "~/.openclaude", "agents": "CLAUDE.md"},
+    "openinterpreter": {"name": "Open Interpreter", "path": "~/.openinterpreter", "agents": "AGENTS.md"},
+    "grok": {"name": "Grok Build CLI", "path": "~/.grok", "agents": "AGENTS.md"},
+    "qwen": {"name": "Qwen", "path": "~/.qwen", "agents": "AGENTS.md"},
+    # zoo（Zoo Code）接手已停服的 Roo Code，配置目录沿用 ~/.roo
+    "zoo": {"name": "Zoo Code", "path": "~/.roo", "agents": "AGENTS.md"},
 }
 
 

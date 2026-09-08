@@ -40,26 +40,30 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 
 | 渠道 | 配置文件 |
 |------|----------|
-| Claude | `~/.claude/CLAUDE.md` |
+| Claude Code | `~/.claude/CLAUDE.md` |
 | OpenClaude | `~/.openclaude/CLAUDE.md` |
 | OpenCode | `~/.opencode/AGENTS.md` |
 | Codex | `~/.codex/AGENTS.md` |
 | Command Code | `~/.commandcode/AGENTS.md` |
+| DeepSeek Harness | `~/.dsh/AGENTS.md` |
+| Oh My Pi | `~/.omp/agent/AGENTS.md` |
 | Qwen | `~/.qwen/AGENTS.md` |
 | CodeBuddy | `~/.codebuddy/CODEBUDDY.md` |
 | Cline | `~/.cline/CLAUDE.md` |
-| Zoo | `~/.roo/AGENTS.md` |
+| Zoo Code | `~/.roo/AGENTS.md` |
 | Factory | `~/.factory/AGENTS.md` |
 | Qoder | `~/.qoder/AGENTS.md` |
+| Qoder CN | `~/.qoder-cn/AGENTS.md` |
+| WorkBuddy | `~/.workbuddy/CODEBUDDY.md` |
 | LangCLI | `~/.langcli/LANGCLI.md` |
 | Antigravity | `~/.gemini/GEMINI.md` |
 | AtomCode | `~/.atomcode/ATOMCODE.md` |
-| OpenInterpreter | `~/.openinterpreter/AGENTS.md` |
+| Open Interpreter | `~/.openinterpreter/AGENTS.md` |
 | ZCode | `~/.zcode/AGENTS.md` |
 | JCode | `~/.jcode/AGENTS.md` |
-| Kilo | `~/.kilocode/AGENTS.md` |
+| Kilo Code | `~/.kilocode/AGENTS.md` |
+| Kiro | `~/.kiro/AGENTS.md` |
 | Pi | `~/.pi/agent/AGENTS.md` |
-| Omp（Oh My Pi） | `~/.omp/agent/AGENTS.md` |
 | Grok Build CLI | `~/.grok/AGENTS.md` |
 
 渠道清单按以下三层合并，优先级由高到低（`just platforms` 可查看各渠道来源）：

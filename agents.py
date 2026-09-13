@@ -188,7 +188,7 @@ def load_config(project_dir: Path) -> dict:
 # ==================== 内置渠道配置 ====================
 
 # 渠道清单与 ../xskill/docs/PLATFORMS.md 保持一致（单一出处）：
-# 全部 25 个渠道写死于此，无需在 config.yaml 重复配置即可安装；
+# 全部 27 个渠道写死于此，无需在 config.yaml 重复配置即可安装；
 # config.yaml 仍可覆盖同名渠道，~/.xskill/settings.json 仍可补充新渠道。
 # 合并优先级：config.yaml 显式配置 > 内置渠道 > ~/.xskill/settings.json 补充。
 #
@@ -235,6 +235,10 @@ BUILTIN_PLATFORMS = {
     "qwen": {"name": "Qwen", "path": "~/.qwen", "agents": "AGENTS.md"},
     # zoo（Zoo Code）接手已停服的 Roo Code，配置目录沿用 ~/.roo
     "zoo": {"name": "Zoo Code", "path": "~/.roo", "agents": "AGENTS.md"},
+    # mimocode（MiMo Code）全局配置目录为 ~/.config/mimocode/skills
+    "mimocode": {"name": "MiMo Code", "path": "~/.config/mimocode", "agents": "AGENTS.md"},
+    # agentty（Agentty）全局配置目录为 ~/.agentty/skills，兼容 .agents/ 规范目录
+    "agentty": {"name": "Agentty", "path": "~/.agentty", "agents": "AGENTS.md"},
 }
 
 

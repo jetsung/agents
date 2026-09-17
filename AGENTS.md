@@ -1,26 +1,43 @@
-# 智能体约束
+# Agent Constraints
 
-- 中文回复（所有回复与输出均须使用简体中文）
-- 提交时不要添加 AI 共同作者标签
-- 用中文编写 git 提交信息
-- 你的每个推理过程必须完整地以简体中文呈现（包括所有分析步骤、决策原因和详细解释）。你只能始终用简体中文思考和输出，不得使用任何英文。
+- Reply in Chinese (all replies and output must use Simplified Chinese)
+- Do not add AI co-author tags when committing
+- Write git commit messages in Chinese
+- Every part of your reasoning must be presented entirely in Simplified Chinese (including all analysis steps, decision rationale, and detailed explanations). You must always think and output only in Simplified Chinese; no English allowed.
 
-# 网络规则（中国网络代理）
+# Network Rules (China Network Proxy)
 
-当环境变量 `IS_CHINA` 的值为 `1`（中国网络环境）时，在使用 WebFetch 等工具抓取网页或下载文件**之前**，必须先检查 `IS_CHINA` 的值：若为 `1` 且链接命中下方「代理域名清单」中的域名，先在其前面添加前缀 `https://filetas.asfd.cn`，**然后再执行**抓取。严禁先发起请求、失败后再补充代理前缀。
+When the environment variable `IS_CHINA` is set to `1` (China network environment), before using tools such as WebFetch to fetch web pages or download files, you **must** first check the value of `IS_CHINA`: if it is `1` and the link matches a domain in the "Proxy Domain List" below, first prepend the prefix `https://filetas.asfd.cn` to it, **then** perform the fetch. Never send the request first and add the proxy prefix only after a failure.
 
-## 代理域名清单
+## Proxy Domain List
 
-| 域名 | 改写示例 |
+| Domain | Rewriting Example |
 | --- | --- |
 | raw.githubusercontent.com | `https://filetas.asfd.cn/https://raw.githubusercontent.com/xxx` |
 
-后续发现其他需要走代理的域名，直接在上表末尾追加一行即可（仅填域名与示例）。
+When other domains that need the proxy are discovered later, simply append a row at the end of the table above (domain and example only).
 
-若访问未在清单中的域名或链接失败（如超时、连接被重置），可先按上述方式将该域名加入清单并加前缀 `https://filetas.asfd.cn` 后，重新抓取尝试。
+If you access a domain not in the list or a link fails (e.g. timeout, connection reset), you may first add that domain to the list as described above with the `https://filetas.asfd.cn` prefix, then retry the fetch.
 
-# 命令行工具清单
-以下命令行工具已在当前环境收录（含安装脚本与短链），清单见：
+## Docker Image Pull
+
+When pulling Docker images (`docker pull`, images referenced by `docker run`, `docker compose up/pull`, etc.), you **must** first check the value of `IS_CHINA`: if it is `1` (China network environment), do **not** run `docker pull` or `docker compose pull` directly — use the `docker-mtrans` CLI instead:
+
+```bash
+# single image: sync to the target registry via remote pipeline, then pull back and rename to the original image name — all in one step
+docker mtrans spull <source-image>
+
+# compose: extract all images from the compose file(s) and spull them serially (stops on first failure)
+docker mtrans compose spull [-f <compose-file>...]
+```
+
+- Replace `docker pull <image>` with `docker mtrans spull <image>`; the local result is the same image name.
+- Replace any compose-driven pull (`docker compose pull`, or `docker compose up` pulling missing images) with `docker mtrans compose spull` first, then run `docker compose up` normally once all images are local.
+- If `docker mtrans` is not installed, install it first: `curl -fsSL https://mtrans.gcli.cn/install.sh | bash` (docs: https://mtrans.gcli.cn).
+- Only fall back to plain `docker pull` when `IS_CHINA` is not `1`, or the image already exists locally.
+
+# Command-Line Tool List
+The following command-line tools are already available in this environment (with install scripts and short links); see the list at:
 @CMD.md
-开发中可优先使用这些命令行工具（如 fd、ast-grep、yq 等）。若工具未安装，按 @CMD.md 中的一键安装命令（`TOOLS` 清单 + `curl -fsSL https://fx4.cn/<短码> | bash`）安装后再调用。
+Prefer these command-line tools during development (e.g. fd, ast-grep, yq, etc.). If a tool is not installed, install it first using the one-line install command in @CMD.md (the `TOOLS` list + `curl -fsSL https://fx4.cn/<shortcode> | bash`), then invoke it.
 @RTK.md

@@ -26,6 +26,7 @@ procs
 rg
 rtk
 wt
+workmux
 yq
 "
 
@@ -99,6 +100,10 @@ echo "全部完成！"
 - wt
   https://github.com/max-sixty/worktrunk
   管理 Git worktree 的 CLI，专为并行 AI Agent 工作流设计（worktrunk）
+
+- workmux
+  https://github.com/raine/workmux
+  管理 git worktree 与 tmux 窗口的并行开发工作流工具，支持多 AI Agent 并行开发
 
 - yq
   https://github.com/mikefarah/yq

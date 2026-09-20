@@ -22,8 +22,11 @@ eza
 fd
 jed
 lsd
+oxipng
 procs
+resvg
 rg
+rimage
 rtk
 wt
 workmux
@@ -85,13 +88,25 @@ echo "全部完成！"
   https://github.com/lsd-rs/lsd
   下一代 ls 命令：彩色、带图标、更现代的目录列表工具
 
+- oxipng
+  https://github.com/oxipng/oxipng
+  用 Rust 编写的多线程 PNG 无损压缩优化工具
+
 - procs
   https://github.com/dalance/procs
   用 Rust 编写的现代 ps 进程查看替代工具
 
+- resvg
+  https://github.com/linebender/resvg
+  高性能 SVG 渲染器，可将 SVG 转换为 PNG 等位图
+
 - rg
   https://github.com/BurntSushi/ripgrep
   极速递归搜索文件内容的正则工具，遵循 gitignore 规则
+
+- rimage
+  https://github.com/vlad-salone/rimage
+  用 Rust 编写的批量图片压缩/格式转换工具（支持 PNG/JPEG/WebP/AVIF）
 
 - rtk
   https://github.com/rtk-ai/rtk

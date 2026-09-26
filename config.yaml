@@ -34,55 +34,90 @@ env:
 #
 # steps 支持的命令（每个步骤可加 name: 说明）:
 #   - name: 步骤说明（可选）
-#     download: 下载文件
-#     - download: URL（支持 $ENV_VAR 替换）
-#     - dest: 保存到临时目录的文件名（默认从 URL 提取）
-#     - extract: 解压目标路径。
-#                当 type 为 skill 时，缺省默认解压到 skills/ 文件夹；
-#                其他情况缺省为 true（同样映射到 skills/）。
-#                true/false/路径字符串
+#     action: download —— 下载文件，保存到 .tmp/<id>/
+#     - source: URL（支持 $ENV_VAR 替换）
+#     - target: 自定义文件名（缺省从 URL 路径提取，剥离 query），
+#       归档名自动导出为 $AGENTS_ARCHIVE 供后续 extract/run 引用
+#     action: extract —— 解压归档（source 为包名，省略时自动使用最近一次
+#       download 的归档名，在 .tmp/<id>/ 查找；
+#       target 缺省按 type：skill → skills/<id>/，mcp → mcp/<id>/
+#       target 已存在先移除；包内唯一顶层目录自动上提）
+#     其他 action 见 config.schema.json（download/extract/mv/cp/rm/mkdir/test/shell）
+#
+#     action 与 run 互斥：
+#     - 无 action（默认 shell）→ 必须提供 run 字段执行脚本
+#     - action: shell → 同样使用 run 字段（run 必填）
+#     - action 为其他内置命令 → 忽略 run 字段（即使存在）
 #   - name: 步骤说明（可选）
-#     run: shell 命令行字符串（类似 GitHub Actions run:），直接执行
-#   - unzip: 解压 zip 文件（已弃用，建议用 download + extract）
-#   - copy: {src, dest}      复制文件/目录
-#   - move: {src, dest}      移动文件/目录
-#   - mkdir: {path}          创建目录
-#   - remove: {path}         删除文件/目录
+#     run: shell 命令行字符串（类似 GitHub Actions run:），直接执行。
+#          工作目录按 type 决定：skill → skills/，mcp → mcp/，
+#          其他 → .tmp（可用 $AGENTS_RUN_DIR 引用）
+#
+# type 支持的值: skill | tool（默认）| mcp | custom
+#   - skill: 作为 skill 解压到项目内 skills/ 目录
+#   - tool:  普通工具
+#   - mcp:   MCP 服务
+#   - custom: 自定义类型，不支持解压，后续工作直接通过 run 步骤执行
 tools:
-  # skills：下载 MCP 工具包，type=skill 时 extract 默认解压到 skills/ 文件夹
+  # https://codearts.huaweicloud.com/download.html#section-8
+  - id: codearts
+    name: CodeArts Check MCP
+    type: mcp
+    doc: https://codearts.huaweicloud.com/download.html#section-8
+    env:
+      URL: https://codeheck-chajian-bj4-obs.obs.cn-north-4.myhuaweicloud.com/mcp/codeartscheck/1.0.0/CodeArtsCheckMCP-1.0.0.tgz
+    steps:
+      - name: 下载 CodeArts Check MCP
+        action: download
+        source: $URL
+      - name: 解压到 mcp/codearts（包内 package/ 顶层目录自动上提）
+        action: extract
+        source: CodeArtsCheckMCP-1.0.0.tgz
+      - name: 打印配置文件
+        run: |
+          echo "MCP 配置:"
+          printf '{"mcpServers":{"CodeArts Check MCP":{"disabled":false,"timeout":600000,"command":["node","%s/dist/index.js"],"environment":{"region":"cn-north-4","ak":"your_ak","sk":"your_sk"},"type":"local"}}}' "$AGENTS_TOOL_DIR" | jq -r
+
+  # skills：下载 Skill 技能包，type=skill 时 extract 默认解压到 skills/ 文件夹
   # weiyun zip 内含 weiyun/ 顶层目录，解压到 skills/ 即得到 skills/weiyun/
   # https://www.weiyun.com/act/skill
   - id: weiyun
-    name: 微云网盘 MCP 技能
+    name: 微云网盘技能
     type: skill
+    doc: https://www.weiyun.com/act/skill
     env:
       URL: https://cdn.addon.tencentsuite.com/static/tencent-weiyun.zip
     steps:
-      - name: 下载微云网盘 MCP 技能
-        download: $URL
-        dest: tencent-weiyun.zip
-      # 兜底：确保最终位于 skills/weiyun（应对 zip 不含顶层目录的情况）
-      - name: 确保落地到 skills/weiyun
-        run: test -d skills/weiyun || mv skills/* skills/weiyun 2>/dev/null || true
+      - name: 下载微云网盘技能
+        action: download
+        source: $URL
+      # 解压到 skills/weiyun：包内 weiyun/ 顶层目录会被自动上提，
+      # 无论 zip 是否含顶层目录，最终都直接落在 skills/weiyun/
+      - name: 解压到 skills/weiyun
+        action: extract
+        source: tencent-weiyun.zip
 
   # https://semi.design/zh-CN/start/mcp-skills#%E5%AE%89%E8%A3%85%20Skills
   - id: semi-design-guide
     name: Semi Design 使用指南
     type: skill
+    doc: https://semi.design/zh-CN/start/mcp-skills#%E5%AE%89%E8%A3%85%20Skills
     env:
       URL: https://semi.design/skills.zip
     steps:
       - name: 下载 Semi Design 使用指南
-        download: $URL
-        dest: skills.zip
-      # 兜底：确保最终位于 skills/weiyun（应对 zip 不含顶层目录的情况）
-      - name: 确保落地到 skills/semi-ui-skills
-        run: test -d skills/semi-ui-skills || mv skills/* skills/semi-ui-skills 2>/dev/null || true
+        action: download
+        source: $URL
+      # 解压到 skills/semi-ui-skills：包内顶层目录自动上提
+      - name: 解压到 skills/semi-ui-skills
+        action: extract
+        source: skills.zip
 
   # https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
   - id: ui-ux-pro-max-skill
     name: UI UX Pro Max
     type: tool
+    doc: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
     steps:
       - name: 安装 UI UX Pro Max
         run: |
@@ -95,6 +130,7 @@ tools:
   - id: spec-kit
     name: GitHub Spec Kit
     type: tool
+    doc: https://github.com/github/spec-kit.git
     steps:
       - name: 安装 GitHub Spec Kit
         run: |
@@ -106,6 +142,7 @@ tools:
   - id: qoder
     name: Qoder CLI
     type: tool
+    doc: https://qoder.com/zh/cli
     steps:
       - name: 安装 Qoder CLI
         run: |
@@ -117,6 +154,7 @@ tools:
   - id: qoder-cn
     name: Qoder CLI（国内版）
     type: tool
+    doc: https://qoder.cn/cli
     steps:
       - name: 安装 Qoder CLI（国内版）
         run: |
@@ -128,6 +166,7 @@ tools:
   - id: atomcode
     name: AtomCode CLI
     type: tool
+    doc: https://atomcode.atomgit.com/
     steps:
       - name: 安装 AtomCode CLI
         run: |
@@ -136,13 +175,14 @@ tools:
         run: |
           atomcode --version
 
-  # skills 示例：run 步骤与 download 步骤组合（run 作为 steps 内步骤类型）
+  # skills 示例：action 与 run 步骤组合
   # - id: example-skill
   #   name: 示例 Skill
   #   type: skill
+  #   doc: Docs URL
   #   steps:
   #     - name: 准备安装
   #       run: echo "准备安装示例 skill..."
   #     - name: 下载并解压
-  #       download: https://example.com/skill.zip
-  #       dest: skill.zip
+  #       action: download
+  #       source: https://example.com/skill.zip

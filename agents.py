@@ -23,12 +23,41 @@ import subprocess
 import os
 import argparse
 import shutil
+import tarfile
 import urllib.request
 import zipfile
 from pathlib import Path
 from datetime import datetime
 
 # ==================== 工具函数 ====================
+
+# ANSI 颜色（非 TTY 输出时自动禁用，避免日志文件中出现色码）
+_USE_COLOR = sys.stdout.isatty()
+
+
+def _c(code: str, text: str) -> str:
+    """给文本加 ANSI 颜色码，非终端环境下原样返回"""
+    return f"\033[{code}m{text}\033[0m" if _USE_COLOR else text
+
+
+def bold(text: str) -> str:
+    """加粗（标题类信息）"""
+    return _c("1", text)
+
+
+def dim(text: str) -> str:
+    """暗灰色（次要信息，如 run 的命令内容）"""
+    return _c("90", text)
+
+
+def cyan(text: str) -> str:
+    """青色（步骤标题/提示）"""
+    return _c("36", text)
+
+
+def green(text: str) -> str:
+    """绿色（完成/成功提示）"""
+    return _c("32", text)
 
 
 def expand_path(path: str) -> Path:
@@ -320,8 +349,13 @@ def create_agents_dir_link() -> None:
     print("完成！")
 
 
-def setup_agents_config() -> None:
-    """安装 agents 配置文件到各 AI 工具"""
+def setup_agents_config(only_platform: str = None) -> None:
+    """安装 agents 配置文件到各 AI 工具
+
+    Args:
+        only_platform: 可选渠道 slug（platforms 字典的键），
+            指定时仅分发该渠道；None 分发全部渠道。
+    """
     project_dir = Path(__file__).parent.resolve()
     agents_dir = expand_path("~/.agents").resolve()
 
@@ -333,10 +367,17 @@ def setup_agents_config() -> None:
     # 合并平台配置：config.yaml > 内置渠道 > ~/.xskill/settings.json 补充
     platforms = load_platforms(project_dir)
 
+    # 指定渠道时校验其存在
+    if only_platform and only_platform not in platforms:
+        print(f"错误: 未找到渠道 '{only_platform}'")
+        print(f"可用渠道: {', '.join(platforms.keys())}")
+        sys.exit(1)
+    selected = platforms.items() if not only_platform else [(only_platform, platforms[only_platform])]
+
     print("以 ~/.agents 为基准安装 agents 配置文件...")
     print("开始建立软链接...")
 
-    for name, platform in platforms.items():
+    for name, platform in selected:
         agents_file = platform.get("agents")
         if not agents_file:
             continue
@@ -373,30 +414,274 @@ def export_env(env_vars: dict):
 
 
 def download_file(url: str, dest: Path) -> None:
-    """下载文件（跨平台）"""
-    print(f"  下载: {url}")
+    """下载文件"""
+    print(f"  {cyan('下载:')} {url}")
     urllib.request.urlretrieve(url, str(dest))
-    print(f"  保存: {dest}")
+    print(f"  {cyan('保存:')} {dest}")
+
+
+def detect_archive_kind(src: Path) -> str:
+    """按文件头魔数识别归档类型（类似 file 命令），不依赖扩展名
+
+    返回 "zip" / "tar.gz" / "tar.xz" / "tar"，未知格式返回 "unknown"。
+    """
+    with open(str(src), "rb") as fh:
+        head = fh.read(6)
+        fh.seek(257)
+        ustar = fh.read(5)
+    if head.startswith(b"PK\x03\x04"):
+        return "zip"
+    if head.startswith(b"\x1f\x8b"):
+        return "tar.gz"
+    if head.startswith(b"\xfd7zXZ\x00"):
+        return "tar.xz"
+    if ustar == b"ustar":
+        return "tar"
+    return "unknown"
 
 
 def unzip_file(src: Path, dest: Path) -> None:
-    """解压 zip 文件（跨平台）"""
-    print(f"  解压: {src}")
-    with zipfile.ZipFile(str(src), "r") as zip_ref:
-        zip_ref.extractall(str(dest))
-    print(f"  目标: {dest}")
+    """解压 zip / tar.gz / tar.xz / tar 归档（按魔数识别，跨平台）"""
+    print(f"  {cyan('解压:')} {src}")
+    kind = detect_archive_kind(src)
+    if kind == "zip":
+        with zipfile.ZipFile(str(src), "r") as zip_ref:
+            zip_ref.extractall(str(dest))
+    elif kind in ("tar.gz", "tar.xz", "tar"):
+        mode = {"tar.gz": "r:gz", "tar.xz": "r:xz", "tar": "r:"}[kind]
+        with tarfile.open(str(src), mode) as tar:
+            tar.extractall(str(dest), filter="data")
+    else:
+        raise ValueError(f"无法识别的归档格式: {src}")
+    print(f"  {cyan('目标:')} {dest}")
 
 
-def execute_steps(steps: list, env_vars: dict, project_dir: Path) -> None:
+def get_run_cwd(project_dir: Path, tool_type: str) -> Path:
+    """run 步骤的工作目录按 type 决定：skill → skills/，mcp → mcp/，其他 → .tmp"""
+    if tool_type == "skill":
+        return project_dir / "skills"
+    if tool_type == "mcp":
+        return project_dir / "mcp"
+    return project_dir / ".tmp"
+
+
+def get_tool_dir(project_dir: Path, tool_type: str, tool_id: str) -> Path:
+    """工具专属目录：AGENTS_RUN_DIR/type/id（run_cwd 与 type 同名时去重）
+
+    mcp → mcp/<id>（run_cwd 已是 mcp/，避免 mcp/mcp）；
+    skill → skills/skill/<id>；tool/custom → .tmp/tool/<id>。
+    """
+    run_dir = get_run_cwd(project_dir, tool_type)
+    if run_dir.name == tool_type:
+        return run_dir / tool_id
+    return run_dir / tool_type / tool_id
+
+
+def resolve_path_ctx(path_str: str, run_cwd: Path, project_dir: Path, tmp_dir: Path) -> Path:
+    """把 run 命令中的路径解析为绝对 Path
+
+    规则：~ 开头 → 用户目录展开；绝对路径 → 原样；
+    其他相对路径按当前工具类型的 run_cwd 解析（skill → skills/，mcp → mcp/，
+    tool/custom → .tmp），同时兼容 skills/、mcp/、.tmp/ 前缀直接落到项目根。
+    """
+    expanded = os.path.expanduser(path_str)
+    p = Path(expanded)
+    if p.is_absolute():
+        return p
+    parts = p.parts
+    if parts and parts[0] in ("skills", "mcp", ".tmp"):
+        return project_dir / p
+    return run_cwd / p
+
+
+def execute_action(step: dict, run_cwd: Path, project_dir: Path, tmp_dir: Path, env_vars: dict,
+                   tool_type: str = "tool", tool_id: str = "") -> None:
+    """执行 action 单操作步骤（Linux 文件命令的结构化写法）
+
+    Args:
+        step: 步骤字典，含 action 及其参数：
+            - download: source 为 URL；target 为目标文件夹（缺省为
+              AGENTS_RUN_DIR/type/id 组合目录），文件名取 URL 最后一段
+            - mv/cp:    source, target
+            - rm:       source（target 可选，多个用 rm 多条）
+            - mkdir:    source（或 target）
+            - test:     source + target 为期望存在性（exists_dir/exists_file 可选断言）
+        run_cwd: 工作目录（相对路径基于它解析）
+        project_dir: 项目根目录（skills/ mcp/ .tmp/ 前缀相对它）
+        tmp_dir: 临时目录
+        env_vars: 环境变量（source/target 支持 $VAR 替换）
+        tool_type: 工具类型（download 缺省目标目录组合用）
+        tool_id: 工具 id（download 缺省目标目录组合用）
+    """
+    import shlex
+
+    action = step["action"]
+
+    def rp(key: str) -> Path:
+        raw = step.get(key)
+        if raw is None:
+            return None
+        resolved = resolve_env_vars(str(raw), env_vars)
+        return resolve_path_ctx(resolved, run_cwd, project_dir, tmp_dir)
+
+    if action == "download":
+        url = resolve_env_vars(str(step.get("source", "")), env_vars)
+        if not url:
+            print(f"action download 需要 source: {step}")
+            sys.exit(1)
+        # 文件名（软件包名）：target 指定时直接作为文件名（支持 $VAR，相对 .tmp/<id>/ 解析），
+        # 未指定时从 URL 路径提取（剥离 query）
+        filename = step.get("target")
+        if filename:
+            filename = resolve_env_vars(str(filename), env_vars)
+            dest_dir = tmp_dir / tool_id
+        else:
+            filename = url.split("/")[-1].split("?")[0]
+            dest_dir = project_dir / ".tmp" / tool_id
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest_file = dest_dir / filename
+        download_file(url, dest_file)
+        # 导出归档文件名，供后续 extract 省略 source 时使用
+        env_vars["AGENTS_ARCHIVE"] = filename
+        export_env({"AGENTS_ARCHIVE": filename})
+        return
+    if action == "extract":
+        # 解压归档：source 为包路径，省略时自动使用最近一次 download 的归档名
+        # （在 .tmp/<id>/ 下查找）；否则优先按 .tmp/<id>/ 解析，其次通用规则；
+        # target 为解压目录（缺省按 type：skill → skills/<id>/，mcp → mcp/<id>/）
+        raw_source = step.get("source")
+        src = rp("source")
+        if src is None and not raw_source:
+            last = env_vars.get("AGENTS_ARCHIVE")
+            if last:
+                src = tmp_dir / tool_id / last
+        if src is None or not src.exists():
+            if not raw_source:
+                print(f"action extract 需要 source（归档文件）: {step}")
+                sys.exit(1)
+            src = tmp_dir / tool_id / str(raw_source)
+        if not src.exists() or src.is_dir():
+            print(f"action extract 需要 source（归档文件）: {step}")
+            sys.exit(1)
+        dest_dir = rp("target")
+        if dest_dir is None:
+            if tool_type == "skill":
+                dest_dir = project_dir / "skills" / tool_id
+            elif tool_type == "mcp":
+                dest_dir = project_dir / "mcp" / tool_id
+            else:
+                dest_dir = tmp_dir / tool_id
+        # target 已存在则先移除，保证内容全新
+        # （若归档本身位于 target 内——如 tool 类型缺省 target=.tmp/<id>/ 与归档同目录——
+        #   先把归档挪到临时位置，避免清理 target 时把包删掉）
+        if dest_dir == src.parent or dest_dir in src.parents:
+            staged = tmp_dir / f".extract_stage_{src.name}"
+            shutil.move(str(src), str(staged))
+            src = staged
+        if dest_dir.is_dir():
+            shutil.rmtree(str(dest_dir))
+        elif dest_dir.exists():
+            dest_dir.unlink()
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        unzip_file(src, dest_dir)
+
+        # 归档结构适配：若包内所有内容本身包在一层同名/唯一文件夹里，
+        # 则把该文件夹内容上提到 target，避免出现 target/pkg/... 双层
+        entries = [e for e in dest_dir.iterdir()]
+        if len(entries) == 1 and entries[0].is_dir():
+            inner = entries[0]
+            tmp_stage = dest_dir.parent / f".extract_{dest_dir.name}"
+            shutil.move(str(inner), str(tmp_stage))
+            shutil.rmtree(str(dest_dir))
+            tmp_stage.rename(str(dest_dir))
+            print(f"  [{cyan('extract')}] 上提内层目录: {inner.name} -> {dest_dir}")
+        return
+    if action in ("mv", "cp"):
+        src, dest = rp("source"), rp("target")
+        if src is None or dest is None:
+            print(f"action {action} 需要 source 和 target: {step}")
+            sys.exit(1)
+        if action == "mv":
+            # 先删除已存在的 target，避免 mv 把 src 移成 target 的子目录
+            if dest.is_dir():
+                shutil.rmtree(str(dest))
+            elif dest.exists():
+                dest.unlink()
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if action == "mv":
+            shutil.move(str(src), str(dest))
+        elif src.is_dir():
+            shutil.copytree(str(src), str(dest), dirs_exist_ok=True)
+        else:
+            shutil.copy2(str(src), str(dest))
+        print(f"  [{cyan(action)}] {src} -> {dest}")
+    elif action == "rm":
+        target = rp("source") or rp("target")
+        if target is None:
+            print(f"action rm 需要 source: {step}")
+            sys.exit(1)
+        if target.is_dir():
+            shutil.rmtree(str(target))
+        elif target.exists():
+            target.unlink()
+        print(f"  [{cyan('rm')}] {target}")
+    elif action == "mkdir":
+        target = rp("source") or rp("target")
+        if target is None:
+            print(f"action mkdir 需要 source: {step}")
+            sys.exit(1)
+        target.mkdir(parents=True, exist_ok=True)
+        print(f"  [{cyan('mkdir')}] {target}")
+    elif action == "test":
+        # 断言：exists_dir / exists_file / exists 任填其一（true=必须存在，false=必须不存在）
+        src = rp("source")
+        checks = [
+            ("目录", lambda: src.is_dir(), step.get("exists_dir")),
+            ("文件", lambda: src.is_file(), step.get("exists_file")),
+            ("存在", lambda: src.exists(), step.get("exists")),
+        ]
+        for label, fn, expected in checks:
+            if expected is None:
+                continue
+            if fn() is not bool(expected):
+                print(f"action test 失败: {src} 期望{'存在' if expected else '不存在'}（{label}）")
+                sys.exit(1)
+        print(f"  [{cyan('test')}] {src} OK")
+    elif action == "shell":
+        # action: shell —— 使用 run 字段执行脚本（run 必填；source 不参与）
+        cmd_str = step.get("run")
+        if not cmd_str:
+            print(f"action shell 需要 run 字段: {step}")
+            sys.exit(1)
+        cmd = resolve_env_vars(str(cmd_str), env_vars)
+        result = subprocess.run(cmd, shell=True, cwd=str(run_cwd), capture_output=True, text=True)
+        if result.stdout:
+            print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+        if result.stderr:
+            print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr)
+        if result.returncode != 0:
+            print(f"命令执行失败: {cmd}")
+            sys.exit(1)
+    else:
+        print(f"未知 action: {action}")
+        sys.exit(1)
+
+
+def execute_steps(steps: list, env_vars: dict, project_dir: Path, tool_type: str = "tool",
+                  tool_id: str = "") -> None:
     """执行安装步骤（支持跨平台命令）
 
     Args:
         steps: 步骤列表
         env_vars: 环境变量
         project_dir: 项目根目录
+        tool_type: 工具类型（skill/tool/mcp/custom），决定 extract 缺省行为
+        tool_id: 工具 id（action download 缺省目标目录组合用）
     """
     tmp_dir = project_dir / ".tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
+    run_cwd = get_run_cwd(project_dir, tool_type)
+    run_cwd.mkdir(parents=True, exist_ok=True)
 
     for step in steps:
         if isinstance(step, str):
@@ -405,7 +690,7 @@ def execute_steps(steps: list, env_vars: dict, project_dir: Path) -> None:
             result = subprocess.run(
                 resolved,
                 shell=True,
-                cwd=str(tmp_dir),
+                cwd=str(run_cwd),
                 capture_output=False,
                 text=True,
             )
@@ -413,82 +698,33 @@ def execute_steps(steps: list, env_vars: dict, project_dir: Path) -> None:
                 print(f"命令执行失败: {resolved}")
                 sys.exit(1)
         elif isinstance(step, dict):
-            # 新格式：字典命令
-            # dest 相对于项目根目录，src 相对于临时目录
-            if "download" in step:
-                url = resolve_env_vars(step["download"], env_vars)
-                dest = tmp_dir / step.get("dest", url.split("/")[-1])
-                download_file(url, dest)
-
-                # extract 未设置或为 true 时，默认解压到 skills/
-                # extract 为 false 时，不解压
-                # extract 为路径字符串时，解压到指定路径
-                extract_to = step.get("extract", True)
-                if extract_to is not False:
-                    if extract_to is True:
-                        extract_to = "skills"
-                    if not os.path.isabs(extract_to) and not extract_to.startswith("~"):
-                        extract_path = project_dir / extract_to
-                    else:
-                        extract_path = expand_path(extract_to)
-                    extract_path.mkdir(parents=True, exist_ok=True)
-                    unzip_file(dest, extract_path)
-            elif "unzip" in step:
-                src = tmp_dir / resolve_env_vars(step["unzip"], env_vars)
-                # 默认解压到 skills 目录
-                dest_str = step.get("dest", "skills")
-                if not os.path.isabs(dest_str) and not dest_str.startswith("~"):
-                    dest = project_dir / dest_str
-                else:
-                    dest = expand_path(dest_str)
-                dest.mkdir(parents=True, exist_ok=True)
-                unzip_file(src, dest)
-            elif "copy" in step:
-                src = tmp_dir / resolve_env_vars(step["copy"], env_vars)
-                dest_str = step.get("dest", ".")
-                if not os.path.isabs(dest_str) and not dest_str.startswith("~"):
-                    dest = project_dir / dest_str
-                else:
-                    dest = expand_path(dest_str)
-                dest.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(str(src), str(dest), dirs_exist_ok=True)
-            elif "move" in step:
-                src = tmp_dir / resolve_env_vars(step["move"], env_vars)
-                dest_str = step.get("dest", ".")
-                if not os.path.isabs(dest_str) and not dest_str.startswith("~"):
-                    dest = project_dir / dest_str
-                else:
-                    dest = expand_path(dest_str)
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.move(str(src), str(dest))
-            elif "mkdir" in step:
-                d = project_dir / resolve_env_vars(step["mkdir"], env_vars)
-                d.mkdir(parents=True, exist_ok=True)
-            elif "remove" in step:
-                target_str = resolve_env_vars(step["remove"], env_vars)
-                if not os.path.isabs(target_str) and not target_str.startswith("~"):
-                    target = project_dir / target_str
-                else:
-                    target = expand_path(target_str)
-                if target.is_file():
-                    target.unlink()
-                elif target.is_dir():
-                    shutil.rmtree(str(target))
-            elif "run" in step:
+            # 字典步骤：action 与 run 互斥
+            # - 无 action（默认 shell）→ 必须有 run 字段，执行脚本
+            # - action: shell → 同样使用 run 字段
+            # - action: 其他内置命令 → 忽略 run 字段，走 execute_action
+            if "action" not in step and "run" not in step:
+                print(f"步骤缺少 run 字段（无 action 时默认 shell，run 必填）: {step}")
+                sys.exit(1)
+            if "action" in step:
+                execute_action(step, run_cwd, project_dir, tmp_dir, env_vars, tool_type, tool_id)
+            else:
                 run_cmd = resolve_env_vars(step["run"], env_vars)
+                print()  # 命令输出前空一行，便于区分
                 result = subprocess.run(
                     run_cmd,
                     shell=True,
-                    cwd=str(tmp_dir),
-                    capture_output=False,
+                    cwd=str(run_cwd),
+                    capture_output=True,
                     text=True,
                 )
+                # 回显命令输出，末尾无换行时补上，避免与后续输出粘连
+                if result.stdout:
+                    print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+                if result.stderr:
+                    print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr)
                 if result.returncode != 0:
                     print(f"命令执行失败: {run_cmd}")
                     sys.exit(1)
-            else:
-                print(f"未知命令: {step}")
-                sys.exit(1)
         else:
             print(f"无效的步骤格式: {step}")
             sys.exit(1)
@@ -513,8 +749,7 @@ def install_tools(project_dir: Path, tool_filter: str = None):
             print(f"错误: 未找到 id 为 '{tool_filter}' 的工具")
             sys.exit(1)
 
-    has_skill = False
-    has_tool = False
+    installed_types = set()
     for tool in tools:
         tool_id = tool.get("id")
         if not tool_id:
@@ -525,43 +760,42 @@ def install_tools(project_dir: Path, tool_filter: str = None):
         tool_type = tool.get("type", "tool")
         tool_env = tool.get("env") or {}
         steps = tool.get("steps")
-        run_cmd = tool.get("run")
 
-        if tool_type == "skill":
-            has_skill = True
-        else:
-            has_tool = True
+        installed_types.add(tool_type)
 
-        # 合并环境变量
+        # 合并环境变量，并注入当前工具 run 工作目录及工具专属目录的绝对路径
         merged_env = {**global_env, **tool_env}
+        merged_env["AGENTS_RUN_DIR"] = str(get_run_cwd(project_dir, tool_type).absolute())
+        merged_env["AGENTS_TOOL_DIR"] = str(get_tool_dir(project_dir, tool_type, tool_id).absolute())
         export_env(merged_env)
 
-        print(f"安装工具: {tool_name}")
+        print(f"{bold(cyan('安装工具:'))} {tool_name}")
 
-        if steps:
-            # 新格式：steps 列表
-            execute_steps(steps, merged_env, project_dir)
-        elif run_cmd:
-            # 兼容旧格式：run 字符串
-            execute_steps([run_cmd], merged_env, project_dir)
-        else:
-            print(f"错误: 工具 {tool_id} 缺少 steps 或 run 字段")
+        if not steps:
+            print(f"错误: 工具 {tool_id} 缺少 steps 字段")
             sys.exit(1)
+        execute_steps(steps, merged_env, project_dir, tool_type, tool_id)
 
+        print()
         if tool_type == "skill":
-            print(f'Skills "{tool_name}" 安装完成')
+            print(green(f'Skills "{tool_name}" 安装完成'))
+        elif tool_type == "mcp":
+            print(green(f'MCP "{tool_name}" 安装完成'))
         else:
-            print(f'Tool "{tool_name}" 安装完成')
+            print(green(f'Tool "{tool_name}" 安装完成'))
         print()
         print("-" * 80)
 
     suffix = f" (过滤: {tool_filter})" if tool_filter else ""
-    if has_skill and not has_tool:
-        print(f"skills 安装完成{suffix}")
-    elif has_tool and not has_skill:
-        print(f"工具安装完成{suffix}")
+    # 末尾汇总按实际安装的 type 精确提示
+    type_label = {"skill": "skills", "mcp": "mcp", "tool": "tools", "custom": "tools"}
+    if not installed_types:
+        print(f"未安装任何工具{suffix}")
+    elif len(installed_types) == 1:
+        print(f"{type_label[next(iter(installed_types))]} 安装完成{suffix}")
     else:
-        print(f"工具安装完成（含 skills）{suffix}")
+        labels = " / ".join(sorted(type_label[t] for t in installed_types))
+        print(f"{labels} 安装完成{suffix}")
     print()
 
 
@@ -635,6 +869,31 @@ def cmd_platforms_list(project_dir: Path, name: str = None) -> None:
         print(line)
 
 
+def cmd_agents(project_dir: Path, target: str = None) -> None:
+    """agents 子命令入口
+
+    Args:
+        target: None / "all" → 分发到全部渠道；渠道 slug → 仅分发该渠道；
+            其他情况打印帮助（列出可用渠道 slug）。
+    """
+    platforms = load_platforms(project_dir)
+
+    if target in (None, ""):
+        # 无参数：显示帮助（列出渠道）
+        print("用法: just agents all | just agents <SLUG>")
+        print()
+        print(f'{"渠道":<16} {"名称":<20} 目标路径')
+        print("-" * 80)
+        for name, platform in platforms.items():
+            print(f'{name:<16} {platform.get("name", name):<20} {expand_platform_path(platform.get("path", ""), project_dir)}')
+        return
+
+    if target == "all":
+        setup_agents_config(None)
+    else:
+        setup_agents_config(target)
+
+
 def main():
     parser = argparse.ArgumentParser(description="AI Agents 配置安装工具")
     subparsers = parser.add_subparsers(dest="action", help="执行的动作")
@@ -648,8 +907,12 @@ def main():
     install_grp.add_argument("-a", "--all", action="store_true", help="安装 config.yaml 中的全部 tools")
     install_grp.add_argument("tool_id", nargs="?", help="指定要安装的 TOOLS ID")
 
-    # setup-agents
-    subparsers.add_parser("setup-agents", help="安装 agents 配置文件到各 AI 工具")
+    # agents
+    p_agents = subparsers.add_parser(
+        "agents",
+        help="分发 agents 配置：无参数显示帮助，all 全部渠道，或指定渠道 slug",
+    )
+    p_agents.add_argument("target", nargs="?", default="", help="all 或渠道 slug，缺省显示帮助")
 
     # setup
     subparsers.add_parser("setup", help="完整初始化（链接 + 安装 agents）")
@@ -681,8 +944,8 @@ def main():
             install_tools(project_dir, None)
         else:
             install_tools(project_dir, args.tool_id)
-    elif args.action == "setup-agents":
-        setup_agents_config()
+    elif args.action == "agents":
+        cmd_agents(project_dir, args.target or None)
     elif args.action == "setup":
         create_agents_dir_link()
         setup_agents_config()

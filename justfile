@@ -1,30 +1,22 @@
 # AI Agents 配置安装工具
 # 使用方法: just <command> [args]
-# 示例: just tools install / just setup
+# 示例: just install / just list / just agents
 
-# ==================== 工具安装 (tools) ====================
+# ==================== 工具安装 ====================
 
-# just tools install --all / -a   安装 config.yaml 中全部 tools
-# just tools install <TOOLS_ID>   仅安装指定 id 的 tool
-# just tools list  --all / -a     列出全部 tools
-# just tools list  <TOOLS_ID>     仅列出指定 id 的工具信息
+# just install --all / -a   安装 config.yaml 中全部 tools
+# just install <TOOLS_ID>   仅安装指定 id 的 tool
 [group('tools')]
-tools *ARGS:
+install *ARGS:
     #!/bin/bash
-    set -- {{ARGS}}
-    sub="${1:-}"; shift || true
-    case "$sub" in
-        install)
-            uv run agents.py install "$@"
-            ;;
-        list)
-            uv run agents.py tools-list "$@"
-            ;;
-        *)
-            echo "用法: just tools <install|list> [--all|-a|<TOOLS_ID>]"
-            exit 1
-            ;;
-    esac
+    uv run agents.py install {{ARGS}}
+
+# just list --all / -a      列出全部 tools
+# just list <TOOLS_ID>      仅列出指定 id 的工具信息
+[group('tools')]
+list *ARGS:
+    #!/bin/bash
+    uv run agents.py tools-list {{ARGS}}
 
 # ==================== 平台渠道 (platforms) ====================
 
@@ -38,29 +30,12 @@ platforms *ARGS:
     #!/bin/bash
     uv run agents.py platforms-list {{ARGS}}
 
-# ==================== 初始化 (setup) ====================
+# ==================== agents 配置分发 ====================
 
-# 安装 agents 配置文件到各 AI 工具
-[group('setup')]
-setup-agents:
+# just agents               显示帮助（列出全部平台渠道 slug）
+# just agents all           分发 agents 配置到所有平台渠道
+# just agents <SLUG>        仅分发到指定渠道（如 claude / codex）
+[group('agents')]
+agents *ARGS:
     #!/bin/bash
-    uv run agents.py setup-agents
-
-# 完整初始化（链接 + 安装 agents）
-# 支持: just setup / just setup agents
-[group('setup')]
-setup TARGET='':
-    #!/bin/bash
-    case "{{TARGET}}" in
-        agents)
-            uv run agents.py setup-agents
-            ;;
-        "")
-            uv run agents.py setup
-            ;;
-        *)
-            echo "不支持的 target: {{TARGET}}"
-            echo "可用: agents"
-            exit 1
-            ;;
-    esac
+    uv run agents.py agents {{ARGS}}

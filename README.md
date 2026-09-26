@@ -19,21 +19,23 @@
 ### 使用 just（推荐）
 
 ```bash
-just setup                # 完整初始化（链接目录 + 安装 agents）
-just setup-agents         # 仅安装 agents 配置文件
-just tools install --all  # 安装 config.yaml 中 tools 配置的全部工具
-just tools install weiyun # 仅安装指定工具
+just agents all           # 分发 agents 配置到全部 AI 工具渠道
+just agents claude        # 仅分发到指定渠道（slug 见 just agents 帮助）
+just install -a           # 安装 config.yaml 中 tools 配置的全部工具
+just install codearts     # 仅安装指定工具
 ```
 
 ### 使用 uv
 
 ```bash
-uv run agents.py setup            # 完整初始化
-uv run agents.py setup-agents     # 仅安装配置
-uv run agents.py install          # 安装 tools 配置的全部工具
-uv run agents.py install weiyun   # 仅安装指定工具
+uv run agents.py agents           # 显示 agents 分发帮助（渠道列表）
+uv run agents.py agents all       # 分发 agents 配置到全部渠道
+uv run agents.py agents claude    # 仅分发到指定渠道
+uv run agents.py install -a       # 安装 tools 配置的全部工具
+uv run agents.py install codearts # 仅安装指定工具
+uv run agents.py setup            # 完整初始化（链接 + 分发配置）
 uv run agents.py tools-list       # 列出全部 tools
-uv run agents.py platforms-list    # 列出全部平台渠道
+uv run agents.py platforms-list   # 列出全部平台渠道
 ```
 
 ## 支持的 AI 工具渠道
@@ -65,6 +67,8 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 | Kiro | `~/.kiro/AGENTS.md` |
 | Pi | `~/.pi/agent/AGENTS.md` |
 | Grok Build CLI | `~/.grok/AGENTS.md` |
+| MiMo Code | `~/.config/mimocode/AGENTS.md` |
+| Agentty | `~/.agentty/AGENTS.md` |
 
 渠道清单按以下三层合并，优先级由高到低（`just platforms` 可查看各渠道来源）：
 
@@ -87,21 +91,24 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 
 对应 `uv run agents.py platforms-list [<CHANNEL>]`。
 
-### 初始化（setup 组）
+### agents 配置分发（agents 组）
 
 | 命令 | 说明 |
 |------|------|
-| `just setup` | 完整初始化：链接目录 + 安装 agents 配置文件 |
-| `just setup agents` | 仅将 agents 配置文件软链到各 AI 工具 |
+| `just agents` | 显示帮助：列出全部渠道 slug、名称与目标路径 |
+| `just agents all` | 将 agents 配置文件分发（软链）到全部 AI 工具渠道 |
+| `just agents <SLUG>` | 仅分发到指定渠道（如 `just agents claude`） |
 
 ### 安装工具（tools 组）
 
 | 命令 | 说明 |
 |------|------|
-| `just tools install --all` / `-a` | 安装 `config.yaml` 中 `tools` 配置的全部工具 |
-| `just tools install <TOOLS_ID>` | 仅安装指定 `id` 的工具（如 `just tools install weiyun`） |
-| `just tools list` | 列出全部 tools |
-| `just tools list <TOOLS_ID>` | 仅列出指定 id 的工具信息 |
+| `just install -a` / `--all` | 安装 `config.yaml` 中 `tools` 配置的全部工具 |
+| `just install <TOOLS_ID>` | 仅安装指定 `id` 的工具（如 `just install codearts`） |
+| `just list` | 列出全部 tools |
+| `just list <TOOLS_ID>` | 仅列出指定 id 的工具信息 |
+
+完整初始化（`~/.agents` 链接 + 分发配置）通过 uv 执行：`uv run agents.py setup`。
 
 ## 项目结构
 
@@ -109,9 +116,10 @@ uv run agents.py platforms-list    # 列出全部平台渠道
 ├── README.md           # 本文件
 ├── config.yaml         # 配置文件（平台、工具安装）
 ├── config.schema.json  # config.yaml 的 JSON Schema（校验与补全）
-├── agents.py           # 跨平台安装脚本
+├── agents.py           # 安装脚本（Linux shell）
 ├── justfile            # just 命令入口
 ├── AGENTS.md           # AI 代理行为配置
+├── docs/               # 开发文档（SPEC.md 功能规格）
 ├── skills/             # type: skill 工具解压落地目录
 └── LICENSE             # Apache License 2.0
 ```
@@ -156,41 +164,71 @@ platforms:
 
 ### tools（工具安装）
 
-需要安装的工具/MCP 包列表，每个条目通过 `steps` 跨平台执行。
+需要安装的工具/MCP 包列表，每个条目通过 `steps` 执行。
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `id` | string | 是 | 工具唯一标识（用于 `just tools install <id>`） |
+| `id` | string | 是 | 工具唯一标识（用于 `just install <id>`） |
 | `name` | string | 否 | 显示名称，默认同 `id` |
 | `env` | map | 否 | 该工具专属环境变量，与全局 `env` 合并，支持 `$VAR` 替换 |
-| `type` | string | 否 | 资源类型：`skill`（作为 skill 解压到项目内 `skills/` 目录）或 `tool`（普通工具，默认） |
-| `steps` | list | 是 | 步骤列表，每个步骤为一个命令（见下表） |
+| `type` | string | 否 | 资源类型：`skill` / `tool`（默认）/ `mcp` / `custom`，决定解压缺省目录与 run 工作目录 |
+| `steps` | list | 是 | 步骤列表（见下） |
 
-每个 `step` 可含可选 `name` 说明字段，并取以下命令之一：
+每个 `step` 可含可选 `name` 说明字段。`action` 与 `run` 互斥：
 
-| 命令 | 参数 | 说明 |
+- **无 `action`**（默认 `shell`）→ 必须提供 `run` 字段，执行脚本
+- **`action: shell`** → 同样使用 `run` 字段（`run` 必填）
+- **`action` 为其他内置命令** → 使用 `source`/`target` 参数，忽略 `run` 字段（即使存在）
+
+内置 actions：
+
+| action | 参数 | 说明 |
 |------|------|------|
-| `download` | `dest`, `extract` | 下载文件；`extract` 缺省为 `true`（解压到 `skills/` 目录），也可为 `false` 或指定解压路径 |
-| `run` | — | 直接执行 shell 命令字符串（类似 GitHub Actions 的 `run:`） |
-| `unzip` | `src`, `dest` | 解压 zip 文件（已弃用，建议用 `download` + `extract`） |
-| `copy` | `src`, `dest` | 复制文件/目录 |
-| `move` | `src`, `dest` | 移动文件/目录 |
-| `mkdir` | `path` | 创建目录 |
-| `remove` | `path` | 删除文件/目录 |
+| `download` | `source`(URL)，`target`(可选文件名) | 下载到 `.tmp/<id>/`；文件名缺省从 URL 提取，并导出为 `$AGENTS_ARCHIVE` |
+| `extract` | `source`(可选)，`target`(可选) | 解压；`source` 省略时自动用最近一次 download 的归档名；`target` 缺省按 type（`skill`→`skills/<id>/`，`mcp`→`mcp/<id>/`）；target 已存在先移除；包内唯一顶层目录自动上提 |
+| `mv` | `source`, `target` | 移动；target 已存在时先删除 |
+| `cp` | `source`, `target` | 复制（目录递归） |
+| `rm` | `source` | 删除文件/目录（递归） |
+| `mkdir` | `source` | 创建目录（含父目录） |
+| `test` | `source` + `exists`/`exists_dir`/`exists_file` | 存在性断言，不满足则退出 |
+| `shell` | `run`（必填） | 使用 `run` 字段执行脚本 |
 
 ```yaml
 tools:
+  # MCP：下载 tgz 并解压到 mcp/codearts（包内 package/ 顶层目录自动上提）
+  - id: codearts
+    name: CodeArts Check MCP
+    type: mcp
+    env:
+      URL: https://example.com/CodeArtsCheckMCP-1.0.0.tgz
+    steps:
+      - name: 下载
+        action: download
+        source: $URL
+      - name: 解压到 mcp/codearts
+        action: extract          # source 省略，自动用上面下载的归档名
+
+  # Skill：下载 zip 解压到 skills/weiyun
   - id: weiyun
-    name: 微云网盘 MCP 技能
+    name: 微云网盘技能
     type: skill
     env:
       URL: https://cdn.addon.tencentsuite.com/static/tencent-weiyun.zip
     steps:
-      - name: 下载微云网盘 MCP 技能
-        download: $URL
-        dest: tencent-weiyun.zip
-      - name: 确保落地到 skills/weiyun
-        run: test -d skills/weiyun || mv skills/* skills/weiyun 2>/dev/null || true
+      - action: download
+        source: $URL
+      - action: extract
+        source: tencent-weiyun.zip
+
+  # 工具：直接执行 shell 命令
+  - id: atomcode
+    name: AtomCode CLI
+    type: tool
+    steps:
+      - name: 安装
+        run: curl -fsSL https://example.com/install.sh | sh
+      - name: 验证
+        run: atomcode --version
 ```
 
 ## Skills 管理

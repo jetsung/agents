@@ -1,14 +1,15 @@
 .vscode/
-.claude/
 
 # Built Visual Studio Code Extensions
 *.vsix
 
-__pycache__/
+/**/__pycache__/
+/**/.tmp/
 
-.tmp/
 agentskills/
 skills/*
+mcp/*
+
 .skill-lock.json
 skills-lock.json
 .xskill-lock.json

@@ -67,9 +67,9 @@
           },
           "type": {
             "type": "string",
-            "enum": ["skill", "tool"],
+            "enum": ["skill", "tool", "mcp", "custom"],
             "default": "tool",
-            "description": "资源类型：skill 作为 skill 解压到项目内 skills/ 目录，tool 为普通工具（默认）"
+            "description": "资源类型：skill 作为 skill 解压到项目内 skills/ 目录，tool 为普通工具（默认），mcp 为 MCP 服务，custom 为自定义类型（不支持解压，后续工作直接通过 run 步骤执行）"
           },
           "steps": {
             "type": "array",
@@ -82,58 +82,22 @@
                   "type": "string",
                   "description": "步骤说明（可选）"
                 },
-                "download": {
-                  "type": "string",
-                  "description": "下载文件的 URL（支持 $ENV_VAR 替换）"
-                },
-                "dest": {
-                  "type": "string",
-                  "description": "保存到临时目录的文件名（默认从 URL 提取）"
-                },
-                "extract": {
-                  "description": "解压目标路径：true/false/路径字符串。type=skill 时默认解压到 skills/；其他默认 true",
-                  "anyOf": [
-                    { "type": "boolean" },
-                    { "type": "string" }
-                  ]
-                },
                 "run": {
                   "type": "string",
-                  "description": "shell 命令行字符串，直接执行"
+                  "description": "shell 命令行字符串，直接执行（Linux shell）"
                 },
-                "unzip": {
+                "action": {
                   "type": "string",
-                  "description": "解压 zip 文件（已弃用，建议用 download + extract）"
+                  "enum": ["download", "mv", "cp", "rm", "mkdir", "extract", "test", "shell"],
+                  "description": "单操作步骤（action 与 run 互斥）：download 下载（source 为 URL，落盘 .tmp/<id>/；target 为自定义文件名，缺省从 URL 提取并导出为 AGENTS_ARCHIVE），mv/cp 移动/复制（mv 会先删除已存在的 target），rm 删除，mkdir 创建目录，extract 解压（source 为归档包名，省略时自动使用最近一次 download 的归档名，在 .tmp/<id>/ 查找；target 缺省按 type：skill→skills/<id>/，mcp→mcp/<id>/；target 已存在先移除；包内唯一顶层目录自动上提），test 存在性断言，shell 执行 run 字段中的脚本（run 必填）。无 action 时默认为 shell，即必须提供 run 字段；action 为其他内置命令时忽略 run 字段"
                 },
-                "copy": {
-                  "type": "object",
-                  "properties": {
-                    "src": { "type": "string" },
-                    "dest": { "type": "string" }
-                  },
-                  "required": ["src", "dest"]
+                "source": {
+                  "type": "string",
+                  "description": "action 的源路径（相对 run 工作目录，skills/ mcp/ .tmp/ 前缀相对项目根），支持 $ENV_VAR"
                 },
-                "move": {
-                  "type": "object",
-                  "properties": {
-                    "src": { "type": "string" },
-                    "dest": { "type": "string" }
-                  },
-                  "required": ["src", "dest"]
-                },
-                "mkdir": {
-                  "type": "object",
-                  "properties": {
-                    "path": { "type": "string" }
-                  },
-                  "required": ["path"]
-                },
-                "remove": {
-                  "type": "object",
-                  "properties": {
-                    "path": { "type": "string" }
-                  },
-                  "required": ["path"]
+                "target": {
+                  "type": "string",
+                  "description": "action 的目标路径（解析规则同 source）"
                 }
               }
             }

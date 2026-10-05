@@ -36,6 +36,10 @@ docker mtrans compose spull [-f <compose-file>...]
 - If `docker mtrans` is not installed, install it first: `curl -fsSL https://mtrans.gcli.cn/install.sh | bash` (docs: https://mtrans.gcli.cn).
 - Only fall back to plain `docker pull` when `IS_CHINA` is not `1`, or the image already exists locally.
 
+## Docker Image Build
+
+When building images (any `Dockerfile`-based build, e.g. `docker build`, `docker compose build`), you **must** first ensure the base images (and any images referenced by `FROM`, `COPY --from`, etc.) are available locally: check each image first (e.g. `docker image inspect <image>`); if it does not exist locally, pull it with the `docker mtrans` method described above (`docker mtrans spull <image>`), then run the build. Do **not** let `docker build` / `docker compose build` pull images directly.
+
 # Command-Line Tool List
 The following command-line tools are already available in this environment (with install scripts and short links); see the list at:
 @CMD.md

@@ -36,6 +36,10 @@ docker mtrans compose spull [-f <compose文件>...]
 - 若 `docker mtrans` 未安装，先执行安装：`curl -fsSL https://mtrans.gcli.cn/install.sh | bash`（文档：https://mtrans.gcli.cn）。
 - 仅当 `IS_CHINA` 不为 `1`，或镜像已存在于本地时，才回退使用普通的 `docker pull`。
 
+## Docker 镜像构建
+
+在构建镜像（任何基于 `Dockerfile` 的构建，如 `docker build`、`docker compose build`）时，**必须**先确保基础镜像（以及 `FROM`、`COPY --from` 等引用到的所有镜像）在本地可用：逐一判断镜像是否已存在于本地（如 `docker image inspect <镜像>`），不存在时才用上述 `docker mtrans` 方式拉取（`docker mtrans spull <镜像>`），再执行构建。**不要**让 `docker build` / `docker compose build` 自行直接拉取镜像。
+
 # 命令行工具清单
 以下命令行工具已在当前环境收录（含安装脚本与短链），清单见：
 @CMD.md

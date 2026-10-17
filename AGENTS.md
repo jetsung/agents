@@ -5,6 +5,11 @@
 - Write git commit messages in Chinese
 - Every part of your reasoning must be presented entirely in Simplified Chinese (including all analysis steps, decision rationale, and detailed explanations). You must always think and output only in Simplified Chinese; no English allowed.
 
+# Git Push Rules
+
+- Do not push to any Git hosting platform unless explicitly instructed.
+- When testing GitHub Actions, if the git remotes contain a GitHub address (`github`), push with `git push github <branch>` by default unless explicitly instructed otherwise.
+
 # Network Rules (China Network Proxy)
 
 When the environment variable `IS_CHINA` is set to `1` (China network environment), before using tools such as WebFetch to fetch web pages or download files, you **must** first check the value of `IS_CHINA`: if it is `1` and the link matches a domain in the "Proxy Domain List" below, first prepend the prefix `https://filetas.asfd.cn` to it, **then** perform the fetch. Never send the request first and add the proxy prefix only after a failure.

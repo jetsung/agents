@@ -19,6 +19,7 @@ When the environment variable `IS_CHINA` is set to `1` (China network environmen
 | Domain | Rewriting Example |
 | --- | --- |
 | raw.githubusercontent.com | `https://filetas.asfd.cn/https://raw.githubusercontent.com/xxx` |
+| github.com | `https://filetas.asfd.cn/https://github.com/xxx` |
 
 When other domains that need the proxy are discovered later, simply append a row at the end of the table above (domain and example only).
 

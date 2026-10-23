@@ -175,6 +175,18 @@ tools:
         run: |
           atomcode --version
 
+  - id: freebuff
+    name: Freebuff CLI
+    type: tool
+    doc: https://freebuff.com/cli
+    steps:
+      - name: 安装 Freebuff CLI
+        run: |
+          pnpm add -g freebuff
+      - name: 验证 Freebuff CLI 安装状态
+        run: |
+          freebuff --version
+
   # skills 示例：action 与 run 步骤组合
   # - id: example-skill
   #   name: 示例 Skill
